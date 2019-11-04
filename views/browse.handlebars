@@ -1,0 +1,30 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Browsing Computers</title>
+		<meta name="description" content="browsing items page">
+		<meta name="author" content="Abbas Mohamed Al-Amin">
+		<link href="style.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body>
+		<h1>Browse:</h1>
+		
+		<form action="/browse" method="get">
+			<input type="text" name="q" value="{{query}}">
+			<input type="submit" value="Search">
+		</form>
+
+		<ul style="text-align:center">
+			{{#each items}}
+			<li style="display:inline-block">
+				<table style="width: 100%">
+					<tr><td>item image</td></tr>
+					<tr><td>{{this.name}}</td></tr>
+				</table>
+			</li>		
+			{{/each}}
+		</ul>
+</html>

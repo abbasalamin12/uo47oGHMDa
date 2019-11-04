@@ -1,0 +1,21 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Add an Item</title>
+		<meta name="description" content="admin form to add new items">
+		<meta name="author" content="Abbas Mohamed Al-Amin">
+		<link href="style.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body>
+		<h1>Add a new item</h1>
+		<form action="/add-item" enctype="multipart/form-data" method="post">
+			<p>Item Name:<br /><input type="text" name="name" value=""></p>
+            <p>Description:<br /><textarea name="description" placeholder="brief description of item"> </textarea></p>
+			<p>Item Picture:<br /><input type="file" name="picture"></p>
+			<p><input type="submit" value="Add"></p>
+		</form>
+	</body>
+</html>

@@ -7,6 +7,7 @@
 /* MODULE IMPORTS */
 const Koa = require('koa')
 const Router = require('koa-router')
+const Database = require('sqlite-async')
 const views = require('koa-views')
 const staticDir = require('koa-static')
 const bodyParser = require('koa-bodyparser')
@@ -16,6 +17,7 @@ const session = require('koa-session')
 
 /* IMPORT CUSTOM MODULES */
 const User = require('./modules/user')
+const Item = require('./modules/item')
 
 const app = new Koa()
 const router = new Router()
@@ -50,6 +52,33 @@ router.get('/', async ctx => {
 })
 
 /**
+ * The page where the user browses computers.
+ *
+ * @name Browse Page
+ * @route {GET} /browse
+ */
+router.get('/browse', async ctx => {
+	try {
+		let sql = 'SELECT id, name, description FROM items;'
+		let querystring = ''
+		console.log(ctx.query.q)
+		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
+			sql = `SELECT id, name, description FROM items 
+							WHERE upper(title) LIKE "%${ctx.query.q}%" 
+							OR upper(description) LIKE upper("%${ctx.query.q}%");`
+			querystring = ctx.query.q
+		}
+		const db = await Database.open(dbName)
+		const data = await db.all(sql)
+		await db.close()
+		console.log(data)
+		await ctx.render('browse', {items: data, query: querystring})
+	} catch(err) {
+		ctx.body = err.message
+	}
+})
+
+/**
  * The user registration page.
  *
  * @name Register Page
@@ -74,6 +103,36 @@ router.post('/register', koaBody, async ctx => {
 		// await user.uploadPicture(path, type)
 		// redirect to the home page
 		ctx.redirect(`/?msg=new user "${body.name}" added`)
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
+	}
+})
+
+/**
+ * The admin page for adding new items.
+ *
+ * @name Add Item Page
+ * @route {GET} /add-item
+ */
+router.get('/add-item', async ctx => await ctx.render('add-item'))
+
+/**
+ * The script to process adding new items.
+ *
+ * @name Add Item Script
+ * @route {POST} /add-item
+ */
+router.post('/add-item', koaBody, async ctx => {
+	try {
+		// extract the data from the request
+		const body = ctx.request.body
+		console.log(body)
+		// call the functions in the module
+		const item = await new Item(dbName)
+		await item.addItem(body.name, body.description)
+		// await user.uploadPicture(path, type)
+		// redirect to the home page
+		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
 		await ctx.render('error', {message: err.message})
 	}
