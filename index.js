@@ -64,7 +64,7 @@ router.get('/browse', async ctx => {
 		console.log(ctx.query.q)
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
 			sql = `SELECT id, name, description FROM items 
-							WHERE upper(title) LIKE "%${ctx.query.q}%" 
+							WHERE upper(name) LIKE "%${ctx.query.q}%" 
 							OR upper(description) LIKE upper("%${ctx.query.q}%");`
 			querystring = ctx.query.q
 		}
