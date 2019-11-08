@@ -21,8 +21,8 @@
 			{{#each items}}
 			<li style="display:inline-block">
 				<table style="width: 100%">
-					<tr><td>item image</td></tr>
-					<tr><td>{{this.name}}</td></tr>
+					<tr><td><img src="item_images/{{this.id}}/{{this.name}}.jpeg" height="200", width="auto"></td></tr>
+					<tr><td><a href="/details/{{this.id}}">{{this.name}}</a></td></tr>
 				</table>
 			</li>		
 			{{/each}}

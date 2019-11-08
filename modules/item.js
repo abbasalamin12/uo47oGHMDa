@@ -1,10 +1,9 @@
 
 'use strict'
 
-// const fs = require('fs-extra')
+const fs = require('fs-extra')
 const mime = require('mime-types')
 const sqlite = require('sqlite-async')
-const saltRounds = 10
 
 module.exports = class Item {
 
@@ -22,7 +21,7 @@ module.exports = class Item {
 	async addItem(name, description) {
 		try {
 			if(name.length === 0) throw new Error('missing item name')
-			if(description.length === 0) throw new Error('missing item decription')
+			if(description.length === 0) throw new Error('missing item description')
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`item name "${name}" already in use`)
@@ -34,10 +33,14 @@ module.exports = class Item {
 		}
 	}
 
-	async uploadPicture(path, mimeType) {
+	async uploadPicture(path, mimeType, name) {
 		const extension = mime.extension(mimeType)
+		const sql = `SELECT id as itemID FROM items WHERE name="${name}";`
+		const data = await this.db.get(sql)
+		console.log(data)
+		console.log(`name: ${name}`)
 		console.log(`path: ${path}`)
 		console.log(`extension: ${extension}`)
-		//await fs.copy(path, `public/avatars/${username}.${fileExtension}`)
+		await fs.copy(path, `public/item_images/${data.itemID}/${name}.${extension}`)
 	}
 }

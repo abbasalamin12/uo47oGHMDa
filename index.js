@@ -113,9 +113,12 @@ router.post('/register', koaBody, async ctx => {
  *
  * @name Add Item Page
  * @route {GET} /add-item
+ * @authentication This route requires cookie-based authentication.
  */
-router.get('/add-item', async ctx => await ctx.render('add-item'))
-
+router.get('/add-item', async ctx => {
+	if(ctx.session.authorised !== true) return ctx.redirect('/login?msg=you need to log in')
+	await ctx.render('add-item')
+})
 /**
  * The script to process adding new items.
  *
@@ -125,12 +128,13 @@ router.get('/add-item', async ctx => await ctx.render('add-item'))
 router.post('/add-item', koaBody, async ctx => {
 	try {
 		// extract the data from the request
+		const {path, type} = ctx.request.files.itemPicture // gets the path for uploaded image
 		const body = ctx.request.body
 		console.log(body)
 		// call the functions in the module
 		const item = await new Item(dbName)
 		await item.addItem(body.name, body.description)
-		// await user.uploadPicture(path, type)
+		await item.uploadPicture(path, type, body.name)
 		// redirect to the home page
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
