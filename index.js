@@ -59,11 +59,11 @@ router.get('/', async ctx => {
  */
 router.get('/browse', async ctx => {
 	try {
-		let sql = 'SELECT id, name, description FROM items;'
+		let sql = 'SELECT id, name, description, imageSRC FROM items;'
 		let querystring = ''
 		console.log(ctx.query.q)
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
-			sql = `SELECT id, name, description FROM items 
+			sql = `SELECT id, name, description, imageSRC FROM items 
 							WHERE upper(name) LIKE "%${ctx.query.q}%" 
 							OR upper(description) LIKE upper("%${ctx.query.q}%");`
 			querystring = ctx.query.q

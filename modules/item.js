@@ -12,7 +12,7 @@ module.exports = class Item {
 			this.db = await sqlite.open(dbName)
 			// we need this table to store data about each computer
 			const sql = 'CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT,\
-						 name TEXT, description TEXT);' //, cpu TEXT, ram TEXT, graphics_card TEXT);'
+						 name TEXT, description TEXT, imageSRC TEXT);' //, cpu TEXT, ram TEXT, graphics_card TEXT);'
 			await this.db.run(sql)
 			return this
 		})()
@@ -25,7 +25,7 @@ module.exports = class Item {
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`item name "${name}" already in use`)
-			sql = `INSERT INTO items(name, description) VALUES("${name}", "${description}")`
+			sql = `INSERT INTO items(name, description, imageSRC) VALUES("${name}", "${description}", "temp")`
 			await this.db.run(sql)
 			return true
 		} catch(err) {
@@ -41,6 +41,11 @@ module.exports = class Item {
 		console.log(`name: ${name}`)
 		console.log(`path: ${path}`)
 		console.log(`extension: ${extension}`)
-		await fs.copy(path, `public/item_images/${data.itemID}/${name}.${extension}`)
+		const imageSRC = `item_images/${data.itemID}/${name}.${extension}`
+		await fs.copy(path, `${imageSRC}`)
+		//add file source to db
+		const sql2 = `UPDATE items WHERE name="${name}",\
+		SET imageSRC = "${imageSRC}";`
+		await this.db.run(sql2)
 	}
 }
