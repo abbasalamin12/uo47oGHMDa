@@ -29,6 +29,7 @@ module.exports = class User {
 			pass = await bcrypt.hash(pass, saltRounds)
 			sql = `INSERT INTO users(user, pass) VALUES("${user}", "${pass}")`
 			await this.db.run(sql)
+			await this.db.close()
 			return true
 		} catch(err) {
 			throw err
@@ -51,6 +52,7 @@ module.exports = class User {
 			const record = await this.db.get(sql)
 			const valid = await bcrypt.compare(password, record.pass)
 			if(valid === false) throw new Error(`invalid password for account "${username}"`)
+			await this.db.close()
 			return true
 		} catch(err) {
 			throw err

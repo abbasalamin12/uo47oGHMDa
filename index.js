@@ -79,6 +79,25 @@ router.get('/browse', async ctx => {
 })
 
 /**
+ * The page where the user browses computers.
+ *
+ * @name Details/Purchase Page
+ * @route {GET} /details/:id
+ */
+router.get('/details/:id', async ctx => {
+	try {
+		console.log(ctx.params.id)
+		const sql = `SELECT * FROM items WHERE id = ${ctx.params.id};`
+		const db = await Database.open(dbName)
+		const data = await db.get(sql)
+		await db.close()
+		console.log(data)
+		await ctx.render('details', data)
+	} catch(err) {
+		ctx.body = err.message
+	}
+})
+/**
  * The user registration page.
  *
  * @name Register Page

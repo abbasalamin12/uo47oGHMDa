@@ -27,6 +27,7 @@ module.exports = class Item {
 			if(data.records !== 0) throw new Error(`item name "${name}" already in use`)
 			sql = `INSERT INTO items(name, description, imageSRC) VALUES("${name}", "${description}", "temp")`
 			await this.db.run(sql)
+			await this.db.close()
 			return true
 		} catch(err) {
 			throw err
@@ -47,5 +48,6 @@ module.exports = class Item {
 		const sql2 = `UPDATE items WHERE name="${name}",\
 		SET imageSRC = "${imageSRC}";`
 		await this.db.run(sql2)
+		await this.db.close()
 	}
 }
