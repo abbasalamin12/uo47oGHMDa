@@ -27,7 +27,6 @@ module.exports = class Item {
 			if(data.records !== 0) throw new Error(`item name "${name}" already in use`)
 			sql = `INSERT INTO items(name, description, imageSRC) VALUES("${name}", "${description}", "temp")`
 			await this.db.run(sql)
-			await this.db.close()
 			return true
 		} catch(err) {
 			throw err
@@ -43,11 +42,10 @@ module.exports = class Item {
 		console.log(`path: ${path}`)
 		console.log(`extension: ${extension}`)
 		const imageSRC = `item_images/${data.itemID}/${name}.${extension}`
-		await fs.copy(path, `${imageSRC}`)
-		//add file source to db
-		const sql2 = `UPDATE items WHERE name="${name}",\
-		SET imageSRC = "${imageSRC}";`
+		console.log(imageSRC)
+		await fs.copy(path, `public/${imageSRC}`)
+		//update db record to include file image source
+		const sql2 = `UPDATE items SET imageSRC = "${imageSRC}" WHERE id="${data.itemID}"`
 		await this.db.run(sql2)
-		await this.db.close()
 	}
 }
