@@ -13,5 +13,10 @@
 		<h1>{{name}}</h1>
 		<img src="../{{imageSRC}}", height="200", width="auto">
 		<p>{{description}}</p>
+
+		<form action="/cart" enctype="multipart/form-data" method="post">
+			<input type="text" name="discountCode" placeholder="Discount Code">
+			<input type="submit" value="Add to cart">
+		</form>
 	</body>
 </html>

@@ -79,7 +79,7 @@ router.get('/browse', async ctx => {
 })
 
 /**
- * The page where the user browses computers.
+ * The page where the user can purchase and look at details of specific computers.
  *
  * @name Details/Purchase Page
  * @route {GET} /details/:id
@@ -97,6 +97,20 @@ router.get('/details/:id', async ctx => {
 		ctx.body = err.message
 	}
 })
+
+
+router.get('/cart', async ctx => await ctx.render('cart'))
+
+router.post('/cart', koaBody, async ctx => {
+	try {
+		const body = ctx.request.body
+		console.log(body)
+		await ctx.redirect('/cart')
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
+	}
+})
+
 /**
  * The user registration page.
  *
