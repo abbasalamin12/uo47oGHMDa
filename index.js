@@ -105,6 +105,8 @@ router.post('/cart', koaBody, async ctx => {
 	try {
 		const body = ctx.request.body
 		console.log(body)
+		const user = await new User(dbName)
+		await user.addToCart(ctx.session.User, '4')
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})
@@ -188,6 +190,8 @@ router.post('/login', async ctx => {
 		const user = await new User(dbName)
 		await user.login(body.user, body.pass)
 		ctx.session.authorised = true
+		ctx.session.User = body.user
+		console.log(ctx.session.User)
 		return ctx.redirect('/?msg=you are now logged in...')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})

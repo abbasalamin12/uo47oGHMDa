@@ -2,7 +2,7 @@
 'use strict'
 
 const bcrypt = require('bcrypt-promise')
-// const fs = require('fs-extra')
+const fs = require('fs-extra')
 const mime = require('mime-types')
 const sqlite = require('sqlite-async')
 const saltRounds = 10
@@ -41,6 +41,26 @@ module.exports = class User {
 		console.log(`path: ${path}`)
 		console.log(`extension: ${extension}`)
 		//await fs.copy(path, `public/avatars/${username}.${fileExtension}`)
+	}
+
+	async addToCart(user, item) {
+		fs.readFile('carts.json', (err, data) => {
+			if(err) {
+				throw err
+			}
+			data = JSON.parse(data)
+			const userCart = data.carts[user]
+			userCart.push(item)
+
+			// converting to json and makes sure file is indented correctly
+			const indentSpaces = 4
+			const jsonData = JSON.stringify(data, null, indentSpaces)
+			fs.writeFile('carts.json', jsonData, (err) => {
+				if(err) {
+					throw err
+				}
+			})
+		})
 	}
 
 	async login(username, password) {
