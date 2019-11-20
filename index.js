@@ -13,6 +13,7 @@ const staticDir = require('koa-static')
 const bodyParser = require('koa-bodyparser')
 const koaBody = require('koa-body')({multipart: true, uploadDir: '.'})
 const session = require('koa-session')
+const fs = require('fs-extra')
 //const jimp = require('jimp')
 
 /* IMPORT CUSTOM MODULES */
@@ -98,15 +99,33 @@ router.get('/details/:id', async ctx => {
 	}
 })
 
+router.get('/cart', async ctx => {
+	try {
+		const user = await new User(dbName)
+		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
+		const data = JSON.parse(JSONFile)
+		console.log(data.carts)
+		const cartItems = data.carts[ctx.session.User]
+		console.log(cartItems) // make cartItems use
+		const sql = `SELECT * FROM items WHERE id in (${cartItems});`
+		const db = await Database.open(dbName)
+		const cartItemData = await db.all(sql)
+		db.close()
 
-router.get('/cart', async ctx => await ctx.render('cart'))
+		console.log(cartItems)
+		console.log(cartItemData)
+		await ctx.render('cart', cartItems)
+	} catch(err) {
+		ctx.body = err.message
+	}
+})
 
 router.post('/cart', koaBody, async ctx => {
 	try {
 		const body = ctx.request.body
 		console.log(body)
 		const user = await new User(dbName)
-		await user.addToCart(ctx.session.User, '4')
+		await user.addToCart(ctx.session.User, body.itemID)
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})

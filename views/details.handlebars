@@ -16,6 +16,7 @@
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
 			<input type="text" name="discountCode" placeholder="Discount Code">
+			<input type="hidden" name="itemID" value="{{id}}">
 			<input type="submit" value="Add to cart">
 		</form>
 	</body>

@@ -43,23 +43,31 @@ module.exports = class User {
 		//await fs.copy(path, `public/avatars/${username}.${fileExtension}`)
 	}
 
+	async writeData(filename, data) {
+		fs.writeFile(filename, data, (err) => {
+			if(err) {
+				throw err
+			}
+		})
+	}
+
 	async addToCart(user, item) {
 		fs.readFile('carts.json', (err, data) => {
 			if(err) {
 				throw err
 			}
 			data = JSON.parse(data)
+			if(!data.carts[user]) { // if cart doesn't exist, add a new cart
+				data.carts[user] = []
+			}
 			const userCart = data.carts[user]
-			userCart.push(item)
-
-			// converting to json and makes sure file is indented correctly
+			if(!userCart.includes(item)) { // prevents adding duplicate items
+				userCart.push(item)
+			}
+			// this is used to format and write the data to the file
 			const indentSpaces = 4
 			const jsonData = JSON.stringify(data, null, indentSpaces)
-			fs.writeFile('carts.json', jsonData, (err) => {
-				if(err) {
-					throw err
-				}
-			})
+			this.writeData('carts.json', jsonData)
 		})
 	}
 
