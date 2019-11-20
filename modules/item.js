@@ -12,20 +12,28 @@ module.exports = class Item {
 			this.db = await sqlite.open(dbName)
 			// we need this table to store data about each computer
 			const sql = 'CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT,\
-						 name TEXT, description TEXT, imageSRC TEXT);' //, cpu TEXT, ram TEXT, graphics_card TEXT);'
+						 name TEXT, description TEXT, price NUMERIC, imageSRC TEXT);'
 			await this.db.run(sql)
 			return this
 		})()
 	}
 
-	async addItem(name, description) {
+	async checkIfStringMissing(varName) {
+		// made this to reduce function complexity for addItem
+		if(varName.length === 0) throw new Error(`missing item ${varName}`)
+	}
+
+	async addItem(name, description, price) {
 		try {
-			if(name.length === 0) throw new Error('missing item name')
-			if(description.length === 0) throw new Error('missing item description')
+			this.checkIfStringMissing(name)
+			this.checkIfStringMissing(description)
+			if(isNaN(price)) throw new Error('missing item price')
+
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`item name "${name}" already in use`)
-			sql = `INSERT INTO items(name, description, imageSRC) VALUES("${name}", "${description}", "temp")`
+			sql = `INSERT INTO items(name, description, price, imageSRC)\
+			VALUES("${name}", "${description}", "${price}", "temp")`
 			await this.db.run(sql)
 			return true
 		} catch(err) {

@@ -8,26 +8,46 @@
 		<meta name="description" content="browsing items added to cart">
 		<meta name="author" content="Abbas Mohamed Al-Amin">
 		<link href="../style.css" type="text/css" rel="stylesheet" />
+		<style>
+		th, td {
+			text-align: left;
+			border: 0px;
+			padding: 10px;
+		}
+
+		tr:nth-child(even) {
+			background-color: #cecece;
+		}
+	
+		</style>
 	</head>
 	<body>
-		<h1>Shopping Cart:</h1>
-
-		<!--
-		<ul>
-			{{#each cartItems}}
-			<li style="display:inline-block">
-				<table style="width: 100%">
+		<h1>Shopping Cart</h1>
+		
+				<table style="width:60%">
 					<tr>
-						<td>
-							<a href="/details/{{this.id}}"><img src="{{this.imageSRC}}" height="200", width="auto"></a>
-						</td>
+						<th>Item Image:</th>
+						<th>Item Name:</th>
+						<th>Item Price:</th>
 					</tr>
-					<tr><td><a href="/details/{{this.id}}">{{this.name}}</a></td></tr>
+					{{#each cartItems}}
+					<tr>
+						<td style="padding-left: 0px; background-color:white; width:10%;">
+							<a href="/details/{{this.id}}"><img src="{{this.imageSRC}}" height="auto", width="200"></a>
+						</td>
+						<td><a href="/details/{{this.id}}">{{this.name}}</a></td>
+						<td>£{{formatPrice ./price}}</td>
+					</tr>
+					{{/each}}
+					<tr>
+						<td style="background-color: #ffffff;"></td>
+						<td style="font-weight:bold; text-align:right;">Total:</td>
+						<td>£{{formatPrice totalItemPrice.totalPrice}} </td>
+					</tr>
 				</table>
-			</li>		
-			{{/each}}
-		</ul>
-		-->
+			
+
+			
 
 	</body>
 </html>

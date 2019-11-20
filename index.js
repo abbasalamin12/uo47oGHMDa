@@ -14,6 +14,7 @@ const bodyParser = require('koa-bodyparser')
 const koaBody = require('koa-body')({multipart: true, uploadDir: '.'})
 const session = require('koa-session')
 const fs = require('fs-extra')
+const hbs = require('handlebars')
 //const jimp = require('jimp')
 
 /* IMPORT CUSTOM MODULES */
@@ -29,10 +30,15 @@ app.use(staticDir('public'))
 app.use(bodyParser())
 app.use(session(app))
 app.use(views(`${__dirname}/views`, { extension: 'handlebars' }, {map: { handlebars: 'handlebars' }}))
+hbs.registerHelper('formatPrice', (price) => price.toFixed(two))
+
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 const dbName = 'website.db'
+
+// this variable represents the amount of decimal places to format price with
+const two = 2
 
 /**
  * The secure home page.
@@ -60,11 +66,11 @@ router.get('/', async ctx => {
  */
 router.get('/browse', async ctx => {
 	try {
-		let sql = 'SELECT id, name, description, imageSRC FROM items;'
+		let sql = 'SELECT id, name, description, price, imageSRC FROM items;'
 		let querystring = ''
 		console.log(ctx.query.q)
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
-			sql = `SELECT id, name, description, imageSRC FROM items 
+			sql = `SELECT id, name, description, price, imageSRC FROM items 
 							WHERE upper(name) LIKE "%${ctx.query.q}%" 
 							OR upper(description) LIKE upper("%${ctx.query.q}%");`
 			querystring = ctx.query.q
@@ -88,7 +94,8 @@ router.get('/browse', async ctx => {
 router.get('/details/:id', async ctx => {
 	try {
 		console.log(ctx.params.id)
-		const sql = `SELECT * FROM items WHERE id = ${ctx.params.id};`
+		const sql = `SELECT id, name, description, price,\
+		 imageSRC FROM items WHERE id = ${ctx.params.id};`
 		const db = await Database.open(dbName)
 		const data = await db.get(sql)
 		await db.close()
@@ -101,20 +108,20 @@ router.get('/details/:id', async ctx => {
 
 router.get('/cart', async ctx => {
 	try {
-		const user = await new User(dbName)
 		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
-		console.log(data.carts)
 		const cartItems = data.carts[ctx.session.User]
-		console.log(cartItems) // make cartItems use
-		const sql = `SELECT * FROM items WHERE id in (${cartItems});`
+		const sql = `SELECT id, name, description, price, imageSRC FROM items\
+		 WHERE id in (${cartItems});`
+		const sql2 = `SELECT SUM(price) as totalPrice FROM ITEMS WHERE id in (${cartItems});`
 		const db = await Database.open(dbName)
 		const cartItemData = await db.all(sql)
+		const totalPrice = await db.get(sql2)
 		db.close()
 
-		console.log(cartItems)
 		console.log(cartItemData)
-		await ctx.render('cart', cartItems)
+
+		await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice})
 	} catch(err) {
 		ctx.body = err.message
 	}
