@@ -30,8 +30,12 @@ app.use(staticDir('public'))
 app.use(bodyParser())
 app.use(session(app))
 app.use(views(`${__dirname}/views`, { extension: 'handlebars' }, {map: { handlebars: 'handlebars' }}))
-hbs.registerHelper('formatPrice', (price) => price.toFixed(two))
-
+hbs.registerHelper('formatPrice', (price) => {
+	const priceStr = price.toString()
+	const formattedPrice = `${priceStr.substr(0, priceStr.length-two)}.\
+${priceStr.substr(priceStr.length-two, priceStr.length)}`
+	return formattedPrice
+})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
