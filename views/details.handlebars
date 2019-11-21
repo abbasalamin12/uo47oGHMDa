@@ -1,0 +1,23 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>{{name}} | Details</title>
+		<meta name="description" content="Item Description and Purchase Page">
+		<meta name="author" content="Abbas Mohamed Al-Amin">
+		<link href="../style.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body>
+		<h1>{{name}}</h1>
+		<img src="../{{imageSRC}}", height="200", width="auto">
+		<p>{{description}}</p>
+
+		<form action="/cart" enctype="multipart/form-data" method="post">
+			<input type="text" name="discountCode" placeholder="Discount Code">
+			<input type="hidden" name="itemID" value="{{id}}">
+			<input type="submit" value="Add to cart">
+		</form>
+	</body>
+</html>

@@ -13,6 +13,8 @@ const staticDir = require('koa-static')
 const bodyParser = require('koa-bodyparser')
 const koaBody = require('koa-body')({multipart: true, uploadDir: '.'})
 const session = require('koa-session')
+const fs = require('fs-extra')
+const hbs = require('handlebars')
 //const jimp = require('jimp')
 
 /* IMPORT CUSTOM MODULES */
@@ -28,10 +30,19 @@ app.use(staticDir('public'))
 app.use(bodyParser())
 app.use(session(app))
 app.use(views(`${__dirname}/views`, { extension: 'handlebars' }, {map: { handlebars: 'handlebars' }}))
+hbs.registerHelper('formatPrice', (price) => {
+	const priceStr = price.toString()
+	const formattedPrice = `${priceStr.substr(0, priceStr.length-two)}.\
+${priceStr.substr(priceStr.length-two, priceStr.length)}`
+	return formattedPrice
+})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 const dbName = 'website.db'
+
+// this variable represents the amount of decimal places to format price with
+const two = 2
 
 /**
  * The secure home page.
@@ -59,11 +70,11 @@ router.get('/', async ctx => {
  */
 router.get('/browse', async ctx => {
 	try {
-		let sql = 'SELECT id, name, description, imageSRC FROM items;'
+		let sql = 'SELECT id, name, description, price, imageSRC FROM items;'
 		let querystring = ''
 		console.log(ctx.query.q)
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
-			sql = `SELECT id, name, description, imageSRC FROM items 
+			sql = `SELECT id, name, description, price, imageSRC FROM items 
 							WHERE upper(name) LIKE "%${ctx.query.q}%" 
 							OR upper(description) LIKE upper("%${ctx.query.q}%");`
 			querystring = ctx.query.q
@@ -75,6 +86,60 @@ router.get('/browse', async ctx => {
 		await ctx.render('browse', {items: data, query: querystring})
 	} catch(err) {
 		ctx.body = err.message
+	}
+})
+
+/**
+ * The page where the user can purchase and look at details of specific computers.
+ *
+ * @name Details/Purchase Page
+ * @route {GET} /details/:id
+ */
+router.get('/details/:id', async ctx => {
+	try {
+		console.log(ctx.params.id)
+		const sql = `SELECT id, name, description, price,\
+		 imageSRC FROM items WHERE id = ${ctx.params.id};`
+		const db = await Database.open(dbName)
+		const data = await db.get(sql)
+		await db.close()
+		console.log(data)
+		await ctx.render('details', data)
+	} catch(err) {
+		ctx.body = err.message
+	}
+})
+
+router.get('/cart', async ctx => {
+	try {
+		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
+		const data = JSON.parse(JSONFile)
+		const cartItems = data.carts[ctx.session.User]
+		const sql = `SELECT id, name, description, price, imageSRC FROM items\
+		 WHERE id in (${cartItems});`
+		const sql2 = `SELECT SUM(price) as totalPrice FROM ITEMS WHERE id in (${cartItems});`
+		const db = await Database.open(dbName)
+		const cartItemData = await db.all(sql)
+		const totalPrice = await db.get(sql2)
+		db.close()
+
+		console.log(cartItemData)
+
+		await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice})
+	} catch(err) {
+		ctx.body = err.message
+	}
+})
+
+router.post('/cart', koaBody, async ctx => {
+	try {
+		const body = ctx.request.body
+		console.log(body)
+		const user = await new User(dbName)
+		await user.addToCart(ctx.session.User, body.itemID)
+		await ctx.redirect('/cart')
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
 	}
 })
 
@@ -155,6 +220,8 @@ router.post('/login', async ctx => {
 		const user = await new User(dbName)
 		await user.login(body.user, body.pass)
 		ctx.session.authorised = true
+		ctx.session.User = body.user
+		console.log(ctx.session.User)
 		return ctx.redirect('/?msg=you are now logged in...')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})

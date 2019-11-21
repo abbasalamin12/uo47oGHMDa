@@ -1,0 +1,52 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Item Cart</title>
+		<meta name="description" content="browsing items added to cart">
+		<meta name="author" content="Abbas Mohamed Al-Amin">
+		<link href="../style.css" type="text/css" rel="stylesheet" />
+		<style>
+		th, td {
+			text-align: left;
+			border: 0px;
+			padding: 10px;
+		}
+
+		tr:nth-child(even) {
+			background-color: #c7c7c7;
+		}
+		tr:nth-child(odd) {
+			background-color: #d1d1d1;
+		}
+	
+		</style>
+	</head>
+	<body>
+		<h1>Shopping Cart</h1>
+		
+				<table style="width:60%;">
+					<tr style="background-color:white;">
+						<th>Item Image:</th>
+						<th>Item Name:</th>
+						<th>Item Price:</th>
+					</tr>
+					{{#each cartItems}}
+					<tr>
+						<td style="padding-left: 0px; background-color:white; width:10%; text-align: center;>
+							<a href="/details/{{this.id}}"><img src="{{this.imageSRC}}", height="200", width="auto", margin-left="auto", margin-right="auto"></a>
+						</td>
+						<td><a href="/details/{{this.id}}">{{this.name}}</a></td>
+						<td>£{{formatPrice ./price}}</td>
+					</tr>
+					{{/each}}
+					<tr>
+						<td style="background-color:white;"></td>
+						<td style="font-weight:bold; text-align:right;">Total:</td>
+						<td>£{{formatPrice totalItemPrice.totalPrice}} </td>
+					</tr>
+				</table>
+	</body>
+</html>
