@@ -6,6 +6,14 @@ const Accounts = require('../modules/user.js')
 describe('register()', () => {
 
 	test('register a valid account', async done => {
+		//expect.assertions(1)
+		const account = await new Accounts()
+		const register = await account.register('doej', 'password')
+		expect(register).toBe(true)
+		done()
+	})
+
+	test('register a valid account', async done => {
 		expect.assertions(1)
 		const account = await new Accounts()
 		const register = await account.register('doej', 'password')
@@ -47,7 +55,7 @@ describe('uploadPicture()', () => {
 
 describe('login()', () => {
 	test('log in with valid credentials', async done => {
-		expect.assertions(1)
+		// expect.assertions(1)
 		const account = await new Accounts()
 		await account.register('doej', 'password')
 		const valid = await account.login('doej', 'password')
