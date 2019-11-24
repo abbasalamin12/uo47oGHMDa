@@ -13,23 +13,32 @@ module.exports = class User {
 		return (async() => {
 			this.db = await sqlite.open(dbName)
 			// we need this table to store the user accounts
-			const sql = 'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, pass TEXT);'
+			const sql = 'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, pass TEXT,\
+addrLine TEXT, city TEXT, postcode TEXT);'
 			await this.db.run(sql)
 			return this
 		})()
 	}
 
-	async register(user, pass) {
+	async checkIfStringMissing(varValue, varName) {
+		// made this to reduce function complexity for register function
+		if(varValue.length === 0) throw new Error(`missing ${varName}`)
+	}
+
+	async register(user, pass, addrLine, city, postcode) {
 		try {
-			if(user.length === 0) throw new Error('missing username')
-			if(pass.length === 0) throw new Error('missing password')
+			await this.checkIfStringMissing(user, 'username')
+			await this.checkIfStringMissing(pass, 'password')
+			await this.checkIfStringMissing(addrLine, 'address line')
+			await this.checkIfStringMissing(city, 'city')
+			await this.checkIfStringMissing(postcode, 'postcode')
 			let sql = `SELECT COUNT(id) as records FROM users WHERE user="${user}";`
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`username "${user}" already in use`)
 			pass = await bcrypt.hash(pass, saltRounds)
-			sql = `INSERT INTO users(user, pass) VALUES("${user}", "${pass}")`
+			sql = `INSERT INTO users(user, pass, addrLine, city, postcode) \
+			VALUES("${user}", "${pass}", "${addrLine}", "${city}", "${postcode}")`
 			await this.db.run(sql)
-			await this.db.close()
 			return true
 		} catch(err) {
 			throw err
@@ -49,6 +58,7 @@ module.exports = class User {
 				throw err
 			}
 		})
+		return true
 	}
 
 	async addToCart(user, item) {
@@ -69,6 +79,7 @@ module.exports = class User {
 			const jsonData = JSON.stringify(data, null, indentSpaces)
 			this.writeData('carts.json', jsonData)
 		})
+		return true
 	}
 
 	async login(username, password) {
@@ -80,7 +91,6 @@ module.exports = class User {
 			const record = await this.db.get(sql)
 			const valid = await bcrypt.compare(password, record.pass)
 			if(valid === false) throw new Error(`invalid password for account "${username}"`)
-			await this.db.close()
 			return true
 		} catch(err) {
 			throw err
