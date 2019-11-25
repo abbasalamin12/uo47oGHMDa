@@ -4,6 +4,9 @@
 const fs = require('fs-extra')
 const mime = require('mime-types')
 const sqlite = require('sqlite-async')
+const General = require('./generalFunctions')
+
+const gen = new General()
 
 module.exports = class Item {
 
@@ -18,20 +21,11 @@ module.exports = class Item {
 		})()
 	}
 
-	async checkIfStringMissing(varValue ,varName) {
-		// made this to reduce function complexity for addItem
-		try {
-			if(varValue.length === 0) throw new Error(`missing item ${varName}`)
-		} catch(err) {
-			throw err
-		}
-	}
-
 	async addItem(name, description, price) {
 		try {
 			await Promise.all([
-				this.checkIfStringMissing(name, 'name'),
-				this.checkIfStringMissing(description, 'description')]).catch()
+				gen.checkIfStringMissing(name, 'item name'),
+				gen.checkIfStringMissing(description, 'item description')]).catch()
 			if(isNaN(parseInt(price))) throw new Error('missing item price')
 
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`

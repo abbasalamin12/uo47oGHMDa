@@ -3,9 +3,11 @@
 
 const bcrypt = require('bcrypt-promise')
 const fs = require('fs-extra')
-const mime = require('mime-types')
 const sqlite = require('sqlite-async')
+const General = require('./generalFunctions')
 const saltRounds = 10
+
+const gen = new General()
 
 module.exports = class User {
 
@@ -20,22 +22,13 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 		})()
 	}
 
-	async checkIfStringMissing(varValue, varName) {
-		// this was created to help with cyclomatic complexity
-		try {
-			if(varValue.length === 0) throw new Error(`missing ${varName}`)
-		} catch(err) {
-			throw err
-		}
-	}
-
 	async register(user, pass, addrLine, city, postcode) {
 		try {
-			await Promise.all([this.checkIfStringMissing(user, 'username'),
-				this.checkIfStringMissing(pass, 'password') ,
-				this.checkIfStringMissing(addrLine, 'address line'),
-				this.checkIfStringMissing(city, 'city'),
-				this.checkIfStringMissing(postcode, 'postcode')
+			await Promise.all([gen.checkIfStringMissing(user, 'username'),
+				gen.checkIfStringMissing(pass, 'password') ,
+				gen.checkIfStringMissing(addrLine, 'address line'),
+				gen.checkIfStringMissing(city, 'city'),
+				gen.checkIfStringMissing(postcode, 'postcode')
 			]).catch()
 			let sql = `SELECT COUNT(id) as records FROM users WHERE user="${user}";`
 			const data = await this.db.get(sql)
@@ -50,22 +43,6 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 		}
 	}
 
-	async uploadPicture(path, mimeType) {
-		const extension = mime.extension(mimeType)
-		console.log(`path: ${path}`)
-		console.log(`extension: ${extension}`)
-		//await fs.copy(path, `public/avatars/${username}.${fileExtension}`)
-	}
-
-	async writeData(filename, data) {
-		fs.writeFile(filename, data, (err) => {
-			if(err) {
-				throw err
-			}
-		})
-		return true
-	}
-
 	async addToCart(user, item) {
 		const indentSpaces = 4 // this is the amount spaces to use when indenting the JSON
 		fs.readFile('carts.json', (_err, data) => {
@@ -75,11 +52,11 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 				const userCart = data.carts[user]
 				if(!userCart.includes(item)) userCart.push(item) // prevents adding duplicate items
 				const jsonData = JSON.stringify(data, null, indentSpaces)
-				this.writeData('carts.json', jsonData)
+				gen.writeData('carts.json', jsonData)
 			} catch(err) {
 				const template = { 'carts': {'sampleUser': [] } }
 				const jsonTemplate = JSON.stringify(template, null, indentSpaces)
-				this.writeData('carts.json', jsonTemplate)
+				gen.writeData('carts.json', jsonTemplate)
 				this.addToCart(user, item)
 			}
 		})
