@@ -115,17 +115,16 @@ router.get('/cart', async ctx => {
 		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		const cartItems = data.carts[ctx.session.User]
-		const sql = `SELECT id, name, description, price, imageSRC FROM items\
-		 WHERE id in (${cartItems});`
-		const sql2 = `SELECT SUM(price) as totalPrice FROM ITEMS WHERE id in (${cartItems});`
-		const db = await Database.open(dbName)
-		const cartItemData = await db.all(sql)
-		const totalPrice = await db.get(sql2)
-		db.close()
-
-		console.log(cartItemData)
-
-		await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice})
+		if(!cartItems) await ctx.render('cart', {cartExists: false} )
+		else {
+			const sql = `SELECT id, name, description, price, imageSRC FROM items WHERE id in (${cartItems});`
+			const sql2 = `SELECT SUM(price) as totalPrice FROM ITEMS WHERE id in (${cartItems});`
+			const db = await Database.open(dbName)
+			const cartItemData = await db.all(sql)
+			const totalPrice = await db.get(sql2)
+			db.close()
+			await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice, cartExists: true})
+		}
 	} catch(err) {
 		ctx.body = err.message
 	}

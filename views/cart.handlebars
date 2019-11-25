@@ -26,7 +26,8 @@
 	</head>
 	<body>
 		<h1>Shopping Cart</h1>
-		
+
+			{{#if cartExists}}
 				<table style="width:60%;">
 					<tr style="background-color:white;">
 						<th>Item Image:</th>
@@ -35,7 +36,7 @@
 					</tr>
 					{{#each cartItems}}
 					<tr>
-						<td style="padding-left: 0px; background-color:white; width:10%; text-align: center;>
+						<td style="padding-left: 0px; background-color:white; width:10%; text-align: center;"> 
 							<a href="/details/{{this.id}}"><img src="{{this.imageSRC}}", height="200", width="auto", margin-left="auto", margin-right="auto"></a>
 						</td>
 						<td><a href="/details/{{this.id}}">{{this.name}}</a></td>
@@ -48,5 +49,8 @@
 						<td>£{{formatPrice totalItemPrice.totalPrice}} </td>
 					</tr>
 				</table>
+			{{else}}
+				<p> Your cart is empty. </p>
+			{{/if}}
 	</body>
 </html>
