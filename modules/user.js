@@ -21,17 +21,22 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 	}
 
 	async checkIfStringMissing(varValue, varName) {
-		if(varValue.length === 0) throw new Error(`missing ${varName}`)
+		// this was created to help with cyclomatic complexity
+		try {
+			if(varValue.length === 0) throw new Error(`missing ${varName}`)
+		} catch(err) {
+			throw err
+		}
 	}
 
 	async register(user, pass, addrLine, city, postcode) {
 		try {
 			await Promise.all([this.checkIfStringMissing(user, 'username'),
-				this.checkIfStringMissing(pass, 'password'),
+				this.checkIfStringMissing(pass, 'password') ,
 				this.checkIfStringMissing(addrLine, 'address line'),
 				this.checkIfStringMissing(city, 'city'),
 				this.checkIfStringMissing(postcode, 'postcode')
-			])
+			]).catch()
 			let sql = `SELECT COUNT(id) as records FROM users WHERE user="${user}";`
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`username "${user}" already in use`)

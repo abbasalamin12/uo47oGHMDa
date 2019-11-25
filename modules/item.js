@@ -20,13 +20,18 @@ module.exports = class Item {
 
 	async checkIfStringMissing(varValue ,varName) {
 		// made this to reduce function complexity for addItem
-		if(varValue.length === 0) throw new Error(`missing item ${varName}`)
+		try {
+			if(varValue.length === 0) throw new Error(`missing item ${varName}`)
+		} catch(err) {
+			throw err
+		}
 	}
 
 	async addItem(name, description, price) {
 		try {
-			Promise.all([this.checkIfStringMissing(name, 'name'),
-				this.checkIfStringMissing(description, 'description')])
+			await Promise.all([
+				this.checkIfStringMissing(name, 'name'),
+				this.checkIfStringMissing(description, 'description')]).catch()
 			if(isNaN(parseInt(price))) throw new Error('missing item price')
 
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`
