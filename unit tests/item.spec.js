@@ -40,7 +40,7 @@ describe('addItem()', () => {
 	test('add an item without a price', async done => {
 		expect.assertions(1)
 		const item = await new Item()
-		await expect( item.addItem('computer', 'a nice computer', '') )
+		await expect( item.addItem('computer', 'a nice computer', ''))
 			.rejects.toEqual( Error('missing item price'))
 		done()
 	})

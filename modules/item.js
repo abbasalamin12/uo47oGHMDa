@@ -25,9 +25,9 @@ module.exports = class Item {
 
 	async addItem(name, description, price) {
 		try {
-			await this.checkIfStringMissing(name, 'name')
-			await this.checkIfStringMissing(description, 'description')
-			if(isNaN(price)) throw new Error('missing item price')
+			Promise.all([this.checkIfStringMissing(name, 'name'),
+				this.checkIfStringMissing(description, 'description')])
+			if(isNaN(parseInt(price))) throw new Error('missing item price')
 
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`
 			const data = await this.db.get(sql)

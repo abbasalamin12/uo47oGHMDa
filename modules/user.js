@@ -21,17 +21,17 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 	}
 
 	async checkIfStringMissing(varValue, varName) {
-		// made this to reduce function complexity for register function
 		if(varValue.length === 0) throw new Error(`missing ${varName}`)
 	}
 
 	async register(user, pass, addrLine, city, postcode) {
 		try {
-			await this.checkIfStringMissing(user, 'username')
-			await this.checkIfStringMissing(pass, 'password')
-			await this.checkIfStringMissing(addrLine, 'address line')
-			await this.checkIfStringMissing(city, 'city')
-			await this.checkIfStringMissing(postcode, 'postcode')
+			await Promise.all([this.checkIfStringMissing(user, 'username'),
+				this.checkIfStringMissing(pass, 'password'),
+				this.checkIfStringMissing(addrLine, 'address line'),
+				this.checkIfStringMissing(city, 'city'),
+				this.checkIfStringMissing(postcode, 'postcode')
+			])
 			let sql = `SELECT COUNT(id) as records FROM users WHERE user="${user}";`
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`username "${user}" already in use`)
@@ -62,22 +62,21 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 	}
 
 	async addToCart(user, item) {
-		fs.readFile('carts.json', (err, data) => {
-			if(err) {
-				throw err
+		const indentSpaces = 4 // this is the amount spaces to use when indenting the JSON
+		fs.readFile('carts.json', (_err, data) => {
+			try {
+				data = JSON.parse(data)
+				if(!data.carts[user]) data.carts[user] = [] // if cart doesn't exist, add a new cart
+				const userCart = data.carts[user]
+				if(!userCart.includes(item)) userCart.push(item) // prevents adding duplicate items
+				const jsonData = JSON.stringify(data, null, indentSpaces)
+				this.writeData('carts.json', jsonData)
+			} catch(err) {
+				const template = { 'carts': {'sampleUser': [] } }
+				const jsonTemplate = JSON.stringify(template, null, indentSpaces)
+				this.writeData('carts.json', jsonTemplate)
+				this.addToCart(user, item)
 			}
-			data = JSON.parse(data)
-			if(!data.carts[user]) { // if cart doesn't exist, add a new cart
-				data.carts[user] = []
-			}
-			const userCart = data.carts[user]
-			if(!userCart.includes(item)) { // prevents adding duplicate items
-				userCart.push(item)
-			}
-			// this is used to format and write the data to the file
-			const indentSpaces = 4
-			const jsonData = JSON.stringify(data, null, indentSpaces)
-			this.writeData('carts.json', jsonData)
 		})
 		return true
 	}
