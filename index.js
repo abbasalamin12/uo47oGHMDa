@@ -150,7 +150,7 @@ router.post('/cart', koaBody, async ctx => {
 		const body = ctx.request.body
 		console.log(body)
 		const user = await new User(dbName)
-		await user.addToCart(ctx.session.User, body.itemID)
+		await user.addToCart(ctx.session.User, body)
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})

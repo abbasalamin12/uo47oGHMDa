@@ -43,21 +43,21 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 		}
 	}
 
-	async addToCart(user, item) {
+	async addToCart(user, itemDetails) {
 		const indentSpaces = 4 // this is the amount spaces to use when indenting the JSON
 		fs.readFile('carts.json', (_err, data) => {
 			try {
 				data = JSON.parse(data)
 				if(!data.carts[user]) data.carts[user] = [] // if cart doesn't exist, add a new cart
 				const userCart = data.carts[user]
-				if(!userCart.includes(item)) userCart.push(item) // prevents adding duplicate items
+				gen.addToArrayIfNotDuplicate(itemDetails, userCart)// prevents adding duplicate items
 				const jsonData = JSON.stringify(data, null, indentSpaces)
 				gen.writeData('carts.json', jsonData)
 			} catch(err) {
-				const template = { 'carts': {'sampleUser': [] } }
+				const template = { 'carts': {} }
 				const jsonTemplate = JSON.stringify(template, null, indentSpaces)
 				gen.writeData('carts.json', jsonTemplate)
-				this.addToCart(user, item)
+				this.addToCart(user, itemDetails)
 			}
 		})
 		return true

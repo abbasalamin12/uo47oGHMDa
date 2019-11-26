@@ -36,6 +36,21 @@ module.exports = class generalFunctions {
 		}
 	}
 
+	async addToArrayIfNotDuplicate(arr, arrayList) {
+		/* this function checks to see if an array exists in a list
+		   of arrays and if it doesn't exist, it adds it. */
+		try {
+			for(let i=0; i<arrayList.length; i++) {
+				if(JSON.stringify(arrayList[i])===JSON.stringify(arr)) {
+					return true
+				}
+			}
+			arrayList.push(arr)
+		} catch(err) {
+			throw err
+		}
+	}
+
 	/*
 	async readAndParseJSON(fileName) {
 		try {
