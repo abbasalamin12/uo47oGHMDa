@@ -16,22 +16,22 @@
 		<p>£{{formatPrice data.price}}</p>
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
-			{{#if hasExtraOptions}}
+			{{#if itemOptions}}
 				{{#each itemOptions}}
 	
-				{{#if (hasOptions this)}}
-				<nobr>{{@key}}:</nobr>
-				<select name="{{@key}}">
-					{{#each this}}
-						<option value="{{this}}">{{this}}</option>
-					{{/each}}
-				</select>
+				{{#if this}}
+					<nobr>{{@key}}:</nobr>
+					<select name="{{@key}}">
+						{{#each this}}
+							<option value="{{this}}">{{this}}</option>
+						{{/each}}
+					</select>
 				{{/if}}
 				{{/each}}
 				
 			{{else}}
-				<input type="hidden" name="color" value="">
 				<input type="hidden" name="size" value="">
+				<input type="hidden" name="color" value="">
 			{{/if}}
 
 			

@@ -38,20 +38,13 @@ hbs.registerHelper('formatPrice', (price) => {
 ${priceStr.substr(priceStr.length-two, priceStr.length)}`
 	return formattedPrice
 })
-hbs.registerHelper('hasOptions', (optionArray) => {
-	if(optionArray.length>1) {
-		return true
-	} else {
-		return false
-	}
-})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 const dbName = 'website.db'
 
 const two = 2 // this variable represents the amount of decimal places to format price with
-
+const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
 /**
  * The secure home page.
  *
@@ -113,12 +106,12 @@ router.get('/details/:id', async ctx => {
 		const itemOptionsJSON = JSON.parse(JSONFile)
 		if(itemOptionsJSON.itemOptions[`${data.name}`]) {
 			const itemOptions = itemOptionsJSON.itemOptions[`${data.name}`]
-			await ctx.render('details', {data: data, hasExtraOptions: true, itemOptions: itemOptions})
-		} else{await ctx.render('details', {data, hasExtraOptions: false})}
+			await ctx.render('details', {data: data, itemOptions: itemOptions})
+		} else await ctx.render('details', {data})
 	} catch(err) {
 		ctx.body = err.message
-		if(err.code === 'ENOENT') { 
-			fs.writeFile('itemOptions.json', '{"itemOptions": {}}')
+		if(err.code === 'ENOENT') {
+			gen.writeData('itemOptions.json', '{"itemOptions": {}}')
 			ctx.redirect(`/details/${ctx.params.id}`)
 		}
 	}
@@ -129,19 +122,17 @@ router.get('/cart', async ctx => {
 		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		const cartItems = data.carts[ctx.session.User]
-		if(!cartItems) await ctx.render('cart', {cartExists: false} )
+		if(!cartItems) await ctx.render('cart')
 		else {
 			let totalPrice = 0
 			for(const i in cartItems) totalPrice += parseInt(cartItems[i].price)
-			console.log(cartItems)
-			console.log(totalPrice)
-			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice, cartExists: true})
+			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice})
 		}
 	} catch(err) { // creates carts.json if it doesn't exist
 		if(err.code === 'ENOENT') {
-			fs.writeFile('carts.json', '{"carts": {}}')
+			gen.writeData('carts.json', '{"carts": {}}')
 			ctx.redirect('/cart')
-		} 
+		}
 		ctx.body = err.message
 	}
 })
@@ -151,6 +142,26 @@ router.post('/cart', koaBody, async ctx => {
 		const body = ctx.request.body
 		const user = await new User(dbName)
 		if(body.id!==undefined) await user.addToCart(ctx.session.User, body)
+		await ctx.redirect('/cart')
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
+	}
+})
+
+router.post('/remove-from-cart', koaBody, async ctx => {
+	try {
+		const body = ctx.request.body
+		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
+		const data = JSON.parse(JSONFile)
+		let userCart = data.carts[ctx.session.User]
+
+		gen.removeArrFromArr(body, userCart).then( newJSON => {
+			userCart = JSON.parse(newJSON)
+			data.carts[ctx.session.User] = userCart
+
+			const formattedData = JSON.stringify(data, null, indentSpaces)
+			gen.writeData('carts.json', formattedData)
+		})
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})
@@ -217,7 +228,7 @@ router.post('/add-item', koaBody, async ctx => {
 	} catch(err) {
 		if(err.code === 'ENOENT') {
 			const body = ctx.request.body
-			const data = {'itemOptions':{}}
+			const data = {'itemOptions': {} }
 			gen.saveItemOptions('itemOptions.json', data, body.name, body.sizeOptions, body.colorOptions)
 			ctx.redirect('/')
 		} else await ctx.render('error', {message: err.message})

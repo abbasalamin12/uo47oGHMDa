@@ -3,7 +3,6 @@
 
 const fs = require('fs-extra')
 const indentSpaces = 4 // this is the amount of indents to use when formatting json
-const five = 5 // this is the number to substract from filename to get rid of .json part
 
 module.exports = class generalFunctions {
 
@@ -36,6 +35,22 @@ module.exports = class generalFunctions {
 		}
 	}
 
+
+	async removeArrFromArr(arr1, arr2) {
+		try {
+			const strungArr1 = JSON.stringify(arr1)
+			let strungArr2 = JSON.stringify(arr2)
+
+			// removes the array with safety if the array is at the end of the json
+			strungArr2 = strungArr2.replace(strungArr1.concat(','), '') // if the array isn't the last or only item
+			strungArr2 = strungArr2.replace(','.concat(strungArr1), '') // if the array is the last item
+			strungArr2 = strungArr2.replace(strungArr1, '') // if the array is the only item
+			return strungArr2
+		} catch(err) {
+			throw err
+		}
+	}
+
 	async addToArrayIfNotDuplicate(arr, arrayList) {
 		/* this function checks to see if an array exists in a list
 		   of arrays and if it doesn't exist, it adds it. */
@@ -50,24 +65,4 @@ module.exports = class generalFunctions {
 			throw err
 		}
 	}
-
-	/*
-	async readAndParseJSON(fileName) {
-		try {
-			const JSONFile = fs.readFileSync(fileName, 'utf-8')
-			const data = JSON.parse(JSONFile)
-			return data
-		} catch(err) {
-			if(err.code === 'ENOENT') { // if the file doesnt exist, it creates it and recurses the function
-				const JSONTitle = fileName.substr(0, fileName.length-five) //this removes the .json from string
-				const data = JSON.stringify(`${JSONTitle} : {}`)
-				console.log(data)
-				this.writeData(fileName, data)
-				//return this.readAndParseJSON(fileName)
-			} else {
-				throw err
-			}
-		}
-	}*/
-
 }
