@@ -27,12 +27,18 @@
 					{{/each}}
 				</select>
 				{{/if}}
-
 				{{/each}}
 				
+			{{else}}
+				<input type="hidden" name="color" value="">
+				<input type="hidden" name="size" value="">
 			{{/if}}
+
 			
-			<input type="hidden" name="itemID" value="{{data.id}}">
+			<input type="hidden" name="id" value="{{data.id}}">
+			<input type="hidden" name="name" value="{{data.name}}">
+			<input type="hidden" name="price" value="{{data.price}}">
+			<input type="hidden" name="imageSRC" value="{{data.imageSRC}}">
 			<input type="submit" value="Add to cart">
 		</form>
 	</body>

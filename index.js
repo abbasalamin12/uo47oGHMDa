@@ -131,16 +131,17 @@ router.get('/cart', async ctx => {
 		const cartItems = data.carts[ctx.session.User]
 		if(!cartItems) await ctx.render('cart', {cartExists: false} )
 		else {
-			const sql = `SELECT id, name, description, price, imageSRC FROM items WHERE id in (${cartItems});`
-			const sql2 = `SELECT SUM(price) as totalPrice FROM ITEMS WHERE id in (${cartItems});`
-			const db = await Database.open(dbName)
-			const cartItemData = await db.all(sql)
-			const totalPrice = await db.get(sql2)
-			db.close()
-			await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice, cartExists: true})
+			let totalPrice = 0
+			for(const i in cartItems) totalPrice += parseInt(cartItems[i].price)
+			console.log(cartItems)
+			console.log(totalPrice)
+			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice, cartExists: true})
 		}
 	} catch(err) { // creates carts.json if it doesn't exist
-		if(err.code === 'ENOENT') fs.writeFile('carts.json', '{"carts": {}}'); ctx.redirect('/cart')
+		if(err.code === 'ENOENT') {
+			fs.writeFile('carts.json', '{"carts": {}}')
+			ctx.redirect('/cart')
+		} 
 		ctx.body = err.message
 	}
 })
@@ -148,9 +149,8 @@ router.get('/cart', async ctx => {
 router.post('/cart', koaBody, async ctx => {
 	try {
 		const body = ctx.request.body
-		console.log(body)
 		const user = await new User(dbName)
-		await user.addToCart(ctx.session.User, body)
+		if(body.id!==undefined) await user.addToCart(ctx.session.User, body)
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})
