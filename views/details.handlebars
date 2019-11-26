@@ -4,20 +4,31 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>{{name}} | Details</title>
+		<title>{{data.name}} | Details</title>
 		<meta name="description" content="Item Description and Purchase Page">
 		<meta name="author" content="Abbas Mohamed Al-Amin">
 		<link href="../style.css" type="text/css" rel="stylesheet" />
 	</head>
 	<body>
-		<h1>{{name}}</h1>
-		<img src="../{{imageSRC}}", height="200", width="auto">
-		<p>{{description}}</p>
-		<p>£{{formatPrice price}}</p>
+		<h1>{{data.name}}</h1>
+		<img src="../{{data.imageSRC}}", height="200", width="auto">
+		<p>{{data.description}}</p>
+		<p>£{{formatPrice data.price}}</p>
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
-			<input type="text" name="discountCode" placeholder="Discount Code">
-			<input type="hidden" name="itemID" value="{{id}}">
+			{{#if hasExtraOptions}}
+			<p>{{itemOptions.size}}</p>
+			<p>{{this.itemOptions}}</p>
+			<p>{{itemOptions.size}}</p>
+			{{#each itemOptions}}
+			<select name="extraOptions">
+				{{#each this}}
+					<option value="{{this}}">{{this}}</option>
+				{{/each}}
+			</select>
+			{{/each}}
+			{{/if}}
+			<input type="hidden" name="itemID" value="{{data.id}}">
 			<input type="submit" value="Add to cart">
 		</form>
 	</body>

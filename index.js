@@ -20,7 +20,9 @@ const hbs = require('handlebars')
 /* IMPORT CUSTOM MODULES */
 const User = require('./modules/user')
 const Item = require('./modules/item')
+const General = require('./modules/generalFunctions')
 
+const gen = new General()
 const app = new Koa()
 const router = new Router()
 
@@ -41,8 +43,8 @@ const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 const dbName = 'website.db'
 
-// this variable represents the amount of decimal places to format price with
-const two = 2
+const two = 2 // this variable represents the amount of decimal places to format price with
+const indentSpaces = 4 //this number represents the amount of indents to use when formatting JSONs
 
 /**
  * The secure home page.
@@ -97,16 +99,22 @@ router.get('/browse', async ctx => {
  */
 router.get('/details/:id', async ctx => {
 	try {
-		console.log(ctx.params.id)
 		const sql = `SELECT id, name, description, price,\
 		 imageSRC FROM items WHERE id = ${ctx.params.id};`
 		const db = await Database.open(dbName)
-		const data = await db.get(sql)
-		await db.close()
-		console.log(data)
-		await ctx.render('details', data)
+		const data = await db.get(sql); await db.close()
+		const JSONFile = fs.readFileSync('itemOptions.json', 'utf-8')
+		const itemOptionsJSON = JSON.parse(JSONFile)
+		if(itemOptionsJSON.itemOptions[`${data.name}`]) {
+			const itemOptions = itemOptionsJSON.itemOptions[`${data.name}`]
+			await ctx.render('details', {data: data, hasExtraOptions: true, itemOptions: itemOptions})
+		} else{await ctx.render('details', {data, hasExtraOptions: false})}
 	} catch(err) {
 		ctx.body = err.message
+		if(err.code === 'ENOENT') { 
+			fs.writeFile('itemOptions.json', '{"itemOptions": {}}')
+			ctx.redirect(`/details/${ctx.params.id}`)
+		}
 	}
 })
 
@@ -125,7 +133,8 @@ router.get('/cart', async ctx => {
 			db.close()
 			await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice, cartExists: true})
 		}
-	} catch(err) {
+	} catch(err) { // creates carts.json if it doesn't exist
+		if(err.code === 'ENOENT') fs.writeFile('carts.json', '{"carts": {}}'); ctx.redirect('/cart')
 		ctx.body = err.message
 	}
 })
@@ -190,18 +199,22 @@ router.get('/add-item', async ctx => {
  */
 router.post('/add-item', koaBody, async ctx => {
 	try {
-		// extract the data from the request
 		const {path, type} = ctx.request.files.itemPicture // gets the path for uploaded image
 		const body = ctx.request.body
-		console.log(body)
-		// call the functions in the module
 		const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
 		await item.uploadPicture(path, type, body.name)
-		// redirect to the home page
+		const JSONFile = fs.readFileSync('itemOptions.json', 'utf-8')
+		const data = JSON.parse(JSONFile)
+		gen.saveItemOptions('itemOptions.json', data, body.name, body.sizeOptions, body.colorOptions)
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		if(err.code === 'ENOENT') {
+			const body = ctx.request.body
+			const data = {'itemOptions':{}}
+			gen.saveItemOptions('itemOptions.json', data, body.name, body.sizeOptions, body.colorOptions)
+			ctx.redirect('/')
+		} else await ctx.render('error', {message: err.message})
 	}
 })
 
