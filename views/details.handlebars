@@ -17,17 +17,21 @@
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
 			{{#if hasExtraOptions}}
-			<p>{{itemOptions.size}}</p>
-			<p>{{this.itemOptions}}</p>
-			<p>{{itemOptions.size}}</p>
-			{{#each itemOptions}}
-			<select name="extraOptions">
-				{{#each this}}
-					<option value="{{this}}">{{this}}</option>
+				{{#each itemOptions}}
+	
+				{{#if (hasOptions this)}}
+				<nobr>{{@key}}:</nobr>
+				<select name="{{@key}}">
+					{{#each this}}
+						<option value="{{this}}">{{this}}</option>
+					{{/each}}
+				</select>
+				{{/if}}
+
 				{{/each}}
-			</select>
-			{{/each}}
+				
 			{{/if}}
+			
 			<input type="hidden" name="itemID" value="{{data.id}}">
 			<input type="submit" value="Add to cart">
 		</form>

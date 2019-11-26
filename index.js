@@ -38,13 +38,19 @@ hbs.registerHelper('formatPrice', (price) => {
 ${priceStr.substr(priceStr.length-two, priceStr.length)}`
 	return formattedPrice
 })
+hbs.registerHelper('hasOptions', (optionArray) => {
+	if(optionArray.length>1) {
+		return true
+	} else {
+		return false
+	}
+})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 const dbName = 'website.db'
 
 const two = 2 // this variable represents the amount of decimal places to format price with
-const indentSpaces = 4 //this number represents the amount of indents to use when formatting JSONs
 
 /**
  * The secure home page.
