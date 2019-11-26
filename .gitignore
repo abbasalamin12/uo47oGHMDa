@@ -26,4 +26,5 @@ trace/
 *.codio
 *.c9
 carts.json
+itemOptions.json
 public/item_images
