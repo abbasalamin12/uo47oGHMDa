@@ -9,4 +9,13 @@ body {
     color: red;
     padding: 1em;
   }
+
+
+  ul#navbar {
+    text-align:center
+  }
+  ul#navbar li {
+    display:inline;
+    padding:5px;
+  }
   
