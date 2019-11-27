@@ -38,10 +38,6 @@ hbs.registerHelper('formatPrice', (price) => {
 ${priceStr.substr(priceStr.length-two, priceStr.length)}`
 	return formattedPrice
 })
-hbs.registerHelper('checkImages', (arr) => {
-	console.log(arr)
-	return arr
-})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
