@@ -20,7 +20,9 @@ const hbs = require('handlebars')
 /* IMPORT CUSTOM MODULES */
 const User = require('./modules/user')
 const Item = require('./modules/item')
+const General = require('./modules/generalFunctions')
 
+const gen = new General()
 const app = new Koa()
 const router = new Router()
 
@@ -36,14 +38,17 @@ hbs.registerHelper('formatPrice', (price) => {
 ${priceStr.substr(priceStr.length-two, priceStr.length)}`
 	return formattedPrice
 })
+hbs.registerHelper('checkImages', (arr) => {
+	console.log(arr)
+	return arr
+})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 const dbName = 'website.db'
 
-// this variable represents the amount of decimal places to format price with
-const two = 2
-
+const two = 2 // this variable represents the amount of decimal places to format price with
+const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
 /**
  * The secure home page.
  *
@@ -97,16 +102,22 @@ router.get('/browse', async ctx => {
  */
 router.get('/details/:id', async ctx => {
 	try {
-		console.log(ctx.params.id)
-		const sql = `SELECT id, name, description, price,\
-		 imageSRC FROM items WHERE id = ${ctx.params.id};`
-		const db = await Database.open(dbName)
-		const data = await db.get(sql)
-		await db.close()
-		console.log(data)
-		await ctx.render('details', data)
+		const sql = `SELECT id, name, description, price, imageSRC FROM items WHERE id = ${ctx.params.id};`
+		const db = await Database.open(dbName); const data = await db.get(sql); await db.close()
+		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
+		const parsedData = JSON.parse(JSONFile)
+		if(parsedData.itemData[`${data.name}`]) {
+			const itemData = parsedData.itemData[`${data.name}`]
+			const itemOptionsData = {'size': itemData.size, 'color': itemData.color}
+			const imagePaths = itemData.images
+			await ctx.render('details', {data: data, itemOptions: itemOptionsData, imagePaths: imagePaths})
+		} else await ctx.render('details', {data})
 	} catch(err) {
 		ctx.body = err.message
+		if(err.code === 'ENOENT') {
+			gen.writeData('itemData.json', '{"itemData": {}}')
+			ctx.redirect(`/details/${ctx.params.id}`)
+		}
 	}
 })
 
@@ -115,17 +126,17 @@ router.get('/cart', async ctx => {
 		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		const cartItems = data.carts[ctx.session.User]
-		if(!cartItems) await ctx.render('cart', {cartExists: false} )
+		if(!cartItems) await ctx.render('cart')
 		else {
-			const sql = `SELECT id, name, description, price, imageSRC FROM items WHERE id in (${cartItems});`
-			const sql2 = `SELECT SUM(price) as totalPrice FROM ITEMS WHERE id in (${cartItems});`
-			const db = await Database.open(dbName)
-			const cartItemData = await db.all(sql)
-			const totalPrice = await db.get(sql2)
-			db.close()
-			await ctx.render('cart', {cartItems: cartItemData, totalItemPrice: totalPrice, cartExists: true})
+			let totalPrice = 0
+			for(const i in cartItems) totalPrice += parseInt(cartItems[i].price)
+			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice})
 		}
-	} catch(err) {
+	} catch(err) { // creates carts.json if it doesn't exist
+		if(err.code === 'ENOENT') {
+			gen.writeData('carts.json', '{"carts": {}}')
+			ctx.redirect('/cart')
+		}
 		ctx.body = err.message
 	}
 })
@@ -133,9 +144,28 @@ router.get('/cart', async ctx => {
 router.post('/cart', koaBody, async ctx => {
 	try {
 		const body = ctx.request.body
-		console.log(body)
 		const user = await new User(dbName)
-		await user.addToCart(ctx.session.User, body.itemID)
+		if(body.id!==undefined) await user.addToCart(ctx.session.User, body)
+		await ctx.redirect('/cart')
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
+	}
+})
+
+router.post('/remove-from-cart', koaBody, async ctx => {
+	try {
+		const body = ctx.request.body
+		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
+		const data = JSON.parse(JSONFile)
+		let userCart = data.carts[ctx.session.User]
+
+		gen.removeArrFromArr(body, userCart).then( newJSON => {
+			userCart = JSON.parse(newJSON)
+			data.carts[ctx.session.User] = userCart
+
+			const formattedData = JSON.stringify(data, null, indentSpaces)
+			gen.writeData('carts.json', formattedData)
+		})
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})
@@ -190,18 +220,22 @@ router.get('/add-item', async ctx => {
  */
 router.post('/add-item', koaBody, async ctx => {
 	try {
-		// extract the data from the request
-		const {path, type} = ctx.request.files.itemPicture // gets the path for uploaded image
+		const images = ctx.request.files.itemPicture // gets the path for uploaded image
 		const body = ctx.request.body
-		console.log(body)
-		// call the functions in the module
 		const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
-		await item.uploadPicture(path, type, body.name)
-		// redirect to the home page
+		for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
+		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
+		const data = JSON.parse(JSONFile)
+		gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		if(err.code === 'ENOENT') {
+			const body = ctx.request.body
+			const data = {'itemData': {} }
+			gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
+			ctx.redirect('/')
+		} else await ctx.render('error', {message: err.message})
 	}
 })
 

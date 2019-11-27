@@ -25,32 +25,47 @@
 		</style>
 	</head>
 	<body>
+
 		<h1>Shopping Cart</h1>
 
-			{{#if cartExists}}
+			{{#if cartItems}}
 				<table style="width:60%;">
 					<tr style="background-color:white;">
 						<th>Item Image:</th>
 						<th>Item Name:</th>
 						<th>Item Price:</th>
+						<th>Remove Item?</th>
 					</tr>
 					{{#each cartItems}}
 					<tr>
 						<td style="padding-left: 0px; background-color:white; width:10%; text-align: center;"> 
 							<a href="/details/{{this.id}}"><img src="{{this.imageSRC}}", height="200", width="auto", margin-left="auto", margin-right="auto"></a>
 						</td>
-						<td><a href="/details/{{this.id}}">{{this.name}}</a></td>
-						<td>£{{formatPrice ./price}}</td>
+						<td><a href="/details/{{this.id}}">{{this.color}} {{this.size}} {{this.name}}</a></td>
+						<td>£{{formatPrice this.price}}</td>
+						<td>
+							<form action="/remove-from-cart" enctype="multipart/form-data" method="post">
+								<input type="hidden" name="size" value="{{this.size}}">
+								<input type="hidden" name="color" value="{{this.color}}">
+								<input type="hidden" name="id" value="{{this.id}}">
+								<input type="hidden" name="name" value="{{this.name}}">
+								<input type="hidden" name="price" value="{{this.price}}">
+								<input type="hidden" name="imageSRC" value="{{this.imageSRC}}">
+								<input type="submit" value="Remove from cart">
+							</form>
+						</td>
 					</tr>
 					{{/each}}
 					<tr>
 						<td style="background-color:white;"></td>
 						<td style="font-weight:bold; text-align:right;">Total:</td>
-						<td>£{{formatPrice totalItemPrice.totalPrice}} </td>
+						<td>£{{formatPrice totalItemPrice}} </td>
+						
 					</tr>
 				</table>
 			{{else}}
 				<p> Your cart is empty. </p>
 			{{/if}}
+
 	</body>
 </html>

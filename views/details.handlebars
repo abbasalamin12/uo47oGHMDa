@@ -4,20 +4,48 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>{{name}} | Details</title>
+		<title>{{data.name}} | Details</title>
 		<meta name="description" content="Item Description and Purchase Page">
 		<meta name="author" content="Abbas Mohamed Al-Amin">
 		<link href="../style.css" type="text/css" rel="stylesheet" />
 	</head>
 	<body>
-		<h1>{{name}}</h1>
-		<img src="../{{imageSRC}}", height="200", width="auto">
-		<p>{{description}}</p>
-		<p>£{{formatPrice price}}</p>
+		<h1>{{data.name}}</h1>
+		<ul>
+			{{#each imagePaths}}
+				<li style="display:inline-block">
+					<img src="../{{this}}", height="200", width="auto">
+				</li>
+			{{/each}}
+		</ul>
+		
+		<p>{{data.description}}</p>
+		<p>£{{formatPrice data.price}}</p>
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
-			<input type="text" name="discountCode" placeholder="Discount Code">
-			<input type="hidden" name="itemID" value="{{id}}">
+			{{#if itemOptions}}
+				{{#each itemOptions}}
+
+				{{#if this}}
+					<nobr>{{@key}}:</nobr>
+					<select name="{{@key}}">
+						{{#each this}}
+							<option value="{{this}}">{{this}}</option>
+						{{/each}}
+					</select>
+				{{/if}}
+				{{/each}}
+				
+			{{else}}
+				<input type="hidden" name="size" value="">
+				<input type="hidden" name="color" value="">
+			{{/if}}
+
+			
+			<input type="hidden" name="id" value="{{data.id}}">
+			<input type="hidden" name="name" value="{{data.name}}">
+			<input type="hidden" name="price" value="{{data.price}}">
+			<input type="hidden" name="imageSRC" value="{{data.imageSRC}}">
 			<input type="submit" value="Add to cart">
 		</form>
 	</body>

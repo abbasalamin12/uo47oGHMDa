@@ -14,8 +14,12 @@
 		<form action="/add-item" enctype="multipart/form-data" method="post">
 			<p>Item Name:<br /><input type="text" name="name" value=""></p>
             <p>Description:<br /><textarea name="description" placeholder="brief description of item"> </textarea></p>
-			<p>Item Price: (£100.00 should be entered as 10000) <br /><input type="number" name="price"></p>
-			<p>Item Picture:<br /><input type="file" name="itemPicture"></p>
+			<p>Item Price: (£100.00 should be entered as 10000) <br /><input type="number" name="price" placeholder=10000></p>
+			<p>(Adding colors and sizes is optional. Format is comma separated values without spaces)</p>
+			<p>Available Colors: <br/><input type="text" name="colorOptions" placeholder="white, black"> </p>
+			<p>Available Sizes: <br/><input type="text" name="sizeOptions" placeholder="22-inch, 18-inch"> </p>
+			<p>Item Picture:<br /><input type="file" name="itemPicture" multiple></p>
+
 			<p><input type="submit" value="Add"></p>
 		</form>
 	</body>

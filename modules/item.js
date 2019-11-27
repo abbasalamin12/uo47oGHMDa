@@ -4,6 +4,10 @@
 const fs = require('fs-extra')
 const mime = require('mime-types')
 const sqlite = require('sqlite-async')
+const General = require('./generalFunctions')
+
+const gen = new General()
+const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
 
 module.exports = class Item {
 
@@ -18,20 +22,11 @@ module.exports = class Item {
 		})()
 	}
 
-	async checkIfStringMissing(varValue ,varName) {
-		// made this to reduce function complexity for addItem
-		try {
-			if(varValue.length === 0) throw new Error(`missing item ${varName}`)
-		} catch(err) {
-			throw err
-		}
-	}
-
 	async addItem(name, description, price) {
 		try {
 			await Promise.all([
-				this.checkIfStringMissing(name, 'name'),
-				this.checkIfStringMissing(description, 'description')]).catch()
+				gen.checkIfStringMissing(name, 'item name'),
+				gen.checkIfStringMissing(description, 'item description')]).catch()
 			if(isNaN(parseInt(price))) throw new Error('missing item price')
 
 			let sql = `SELECT COUNT(id) as records FROM items WHERE name="${name}";`
@@ -46,19 +41,24 @@ module.exports = class Item {
 		}
 	}
 
-	async uploadPicture(path, mimeType, name) {
-		const extension = mime.extension(mimeType)
-		const sql = `SELECT id as itemID FROM items WHERE name="${name}";`
-		const data = await this.db.get(sql)
-		console.log(data)
-		console.log(`name: ${name}`)
-		console.log(`path: ${path}`)
-		console.log(`extension: ${extension}`)
-		const imageSRC = `item_images/${data.itemID}/${name}.${extension}`
-		console.log(imageSRC)
-		await fs.copy(path, `public/${imageSRC}`)
-		//updates db record to include file image source
-		const sql2 = `UPDATE items SET imageSRC = "${imageSRC}" WHERE id="${data.itemID}"`
-		await this.db.run(sql2)
+	async uploadPicture(path, mimeType, name, imgNo) {
+		try {
+			const itemSQLData = await this.db.get(`SELECT id as itemID FROM items WHERE name="${name}";`)
+			const imageSRC = `item_images/${itemSQLData.itemID}/${name}${imgNo}.${mime.extension(mimeType)}`
+			await fs.copy(path, `public/${imageSRC}`)
+			const sql2 = `UPDATE items SET imageSRC = "${imageSRC}" WHERE id="${itemSQLData.itemID}"`
+			await this.db.run(sql2)
+			const JSONexists = fs.existsSync('itemData.json')
+			if(!JSONexists) gen.writeData('itemData.json', JSON.stringify({'itemData': {}}))
+			fs.readFile('itemData.json', (_err, data) => {
+				data = JSON.parse(data)
+				if(!data.itemData[`${name}`]) data.itemData[`${name}`] = {}
+				if(!data.itemData[`${name}`].images) data.itemData[`${name}`].images = []
+				const imgPaths = data.itemData[`${name}`].images; imgPaths.push(imageSRC)
+				gen.writeData('itemData.json', JSON.stringify(data, null, indentSpaces))
+			})
+		} catch(err) {
+			throw err
+		}
 	}
 }
