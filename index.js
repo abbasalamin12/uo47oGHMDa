@@ -38,6 +38,10 @@ hbs.registerHelper('formatPrice', (price) => {
 ${priceStr.substr(priceStr.length-two, priceStr.length)}`
 	return formattedPrice
 })
+hbs.registerHelper('checkImages', (arr) => {
+	console.log(arr)
+	return arr
+})
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
@@ -98,20 +102,20 @@ router.get('/browse', async ctx => {
  */
 router.get('/details/:id', async ctx => {
 	try {
-		const sql = `SELECT id, name, description, price,\
-		 imageSRC FROM items WHERE id = ${ctx.params.id};`
-		const db = await Database.open(dbName)
-		const data = await db.get(sql); await db.close()
-		const JSONFile = fs.readFileSync('itemOptions.json', 'utf-8')
-		const itemOptionsJSON = JSON.parse(JSONFile)
-		if(itemOptionsJSON.itemOptions[`${data.name}`]) {
-			const itemOptions = itemOptionsJSON.itemOptions[`${data.name}`]
-			await ctx.render('details', {data: data, itemOptions: itemOptions})
+		const sql = `SELECT id, name, description, price, imageSRC FROM items WHERE id = ${ctx.params.id};`
+		const db = await Database.open(dbName); const data = await db.get(sql); await db.close()
+		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
+		const parsedData = JSON.parse(JSONFile)
+		if(parsedData.itemData[`${data.name}`]) {
+			const itemData = parsedData.itemData[`${data.name}`]
+			const itemOptionsData = {'size': itemData.size, 'color': itemData.color}
+			const imagePaths = itemData.images
+			await ctx.render('details', {data: data, itemOptions: itemOptionsData, imagePaths: imagePaths})
 		} else await ctx.render('details', {data})
 	} catch(err) {
 		ctx.body = err.message
 		if(err.code === 'ENOENT') {
-			gen.writeData('itemOptions.json', '{"itemOptions": {}}')
+			gen.writeData('itemData.json', '{"itemData": {}}')
 			ctx.redirect(`/details/${ctx.params.id}`)
 		}
 	}
@@ -221,15 +225,15 @@ router.post('/add-item', koaBody, async ctx => {
 		const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
 		for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
-		const JSONFile = fs.readFileSync('itemOptions.json', 'utf-8')
+		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
-		gen.saveItemOptions('itemOptions.json', data, body.name, body.sizeOptions, body.colorOptions)
+		gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
 		if(err.code === 'ENOENT') {
 			const body = ctx.request.body
-			const data = {'itemOptions': {} }
-			gen.saveItemOptions('itemOptions.json', data, body.name, body.sizeOptions, body.colorOptions)
+			const data = {'itemData': {} }
+			gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 			ctx.redirect('/')
 		} else await ctx.render('error', {message: err.message})
 	}

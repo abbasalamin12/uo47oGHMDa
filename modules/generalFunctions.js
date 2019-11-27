@@ -26,9 +26,8 @@ module.exports = class generalFunctions {
 
 	async saveItemOptions(fileName, data, itemName, sizeOptions, colorOptions) {
 		try {
-			data.itemOptions[`${itemName}`] = {}
-			data.itemOptions[`${itemName}`].size = sizeOptions.split(',')
-			data.itemOptions[`${itemName}`].color = colorOptions.split(',')
+			if(sizeOptions) data.itemData[`${itemName}`].size = sizeOptions.split(',')
+			if(colorOptions) data.itemData[`${itemName}`].color = colorOptions.split(',')
 			this.writeData(fileName, JSON.stringify(data, null, indentSpaces))
 		} catch(err) {
 			throw err

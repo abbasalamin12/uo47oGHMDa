@@ -43,17 +43,19 @@ module.exports = class Item {
 
 	async uploadPicture(path, mimeType, name, imgNo) {
 		try {
-			const itemData = await this.db.get(`SELECT id as itemID FROM items WHERE name="${name}";`)
-			const imageSRC = `item_images/${itemData.itemID}/${name}${imgNo}.${mime.extension(mimeType)}`
+			const itemSQLData = await this.db.get(`SELECT id as itemID FROM items WHERE name="${name}";`)
+			const imageSRC = `item_images/${itemSQLData.itemID}/${name}${imgNo}.${mime.extension(mimeType)}`
 			await fs.copy(path, `public/${imageSRC}`)
-
-			const JSONexists = fs.existsSync('imagePaths.json')
-			if(!JSONexists) gen.writeData('imagePaths.json', JSON.stringify({'imagePaths': {}}))
-			fs.readFile('imagePaths.json', (_err, data) => {
+			const sql2 = `UPDATE items SET imageSRC = "${imageSRC}" WHERE id="${itemSQLData.itemID}"`
+			await this.db.run(sql2)
+			const JSONexists = fs.existsSync('itemData.json')
+			if(!JSONexists) gen.writeData('itemData.json', JSON.stringify({'itemData': {}}))
+			fs.readFile('itemData.json', (_err, data) => {
 				data = JSON.parse(data)
-				if(!data.imagePaths[itemData.itemID]) data.imagePaths[itemData.itemID] = []
-				const imgPaths = data.imagePaths[itemData.itemID]; imgPaths.push(imageSRC)
-				gen.writeData('imagePaths.json', JSON.stringify(data, null, indentSpaces))
+				if(!data.itemData[`${name}`]) data.itemData[`${name}`] = {}
+				if(!data.itemData[`${name}`].images) data.itemData[`${name}`].images = []
+				const imgPaths = data.itemData[`${name}`].images; imgPaths.push(imageSRC)
+				gen.writeData('itemData.json', JSON.stringify(data, null, indentSpaces))
 			})
 		} catch(err) {
 			throw err

@@ -11,14 +11,21 @@
 	</head>
 	<body>
 		<h1>{{data.name}}</h1>
-		<img src="../{{data.imageSRC}}", height="200", width="auto">
+		<ul>
+			{{#each imagePaths}}
+				<li style="display:inline-block">
+					<img src="../{{this}}", height="200", width="auto">
+				</li>
+			{{/each}}
+		</ul>
+		
 		<p>{{data.description}}</p>
 		<p>£{{formatPrice data.price}}</p>
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
 			{{#if itemOptions}}
 				{{#each itemOptions}}
-	
+
 				{{#if this}}
 					<nobr>{{@key}}:</nobr>
 					<select name="{{@key}}">
