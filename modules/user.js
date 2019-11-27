@@ -55,7 +55,7 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 				gen.writeData('carts.json', jsonData)
 			} catch(err) {
 				const template = { 'carts': {} }
-				const jsonTemplate = JSON.stringify(template, null, indentSpaces)
+				const jsonTemplate = JSON.stringify(template)
 				gen.writeData('carts.json', jsonTemplate)
 				this.addToCart(user, itemDetails)
 			}

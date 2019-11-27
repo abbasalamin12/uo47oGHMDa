@@ -28,3 +28,4 @@ trace/
 carts.json
 itemOptions.json
 public/item_images
+imagePaths.json

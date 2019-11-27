@@ -7,6 +7,7 @@ const sqlite = require('sqlite-async')
 const General = require('./generalFunctions')
 
 const gen = new General()
+const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
 
 module.exports = class Item {
 
@@ -40,19 +41,22 @@ module.exports = class Item {
 		}
 	}
 
-	async uploadPicture(path, mimeType, name) {
-		const extension = mime.extension(mimeType)
-		const sql = `SELECT id as itemID FROM items WHERE name="${name}";`
-		const data = await this.db.get(sql)
-		console.log(data)
-		console.log(`name: ${name}`)
-		console.log(`path: ${path}`)
-		console.log(`extension: ${extension}`)
-		const imageSRC = `item_images/${data.itemID}/${name}.${extension}`
-		console.log(imageSRC)
-		await fs.copy(path, `public/${imageSRC}`)
-		//updates db record to include file image source
-		const sql2 = `UPDATE items SET imageSRC = "${imageSRC}" WHERE id="${data.itemID}"`
-		await this.db.run(sql2)
+	async uploadPicture(path, mimeType, name, imgNo) {
+		try {
+			const itemData = await this.db.get(`SELECT id as itemID FROM items WHERE name="${name}";`)
+			const imageSRC = `item_images/${itemData.itemID}/${name}${imgNo}.${mime.extension(mimeType)}`
+			await fs.copy(path, `public/${imageSRC}`)
+
+			const JSONexists = fs.existsSync('imagePaths.json')
+			if(!JSONexists) gen.writeData('imagePaths.json', JSON.stringify({'imagePaths': {}}))
+			fs.readFile('imagePaths.json', (_err, data) => {
+				data = JSON.parse(data)
+				if(!data.imagePaths[itemData.itemID]) data.imagePaths[itemData.itemID] = []
+				const imgPaths = data.imagePaths[itemData.itemID]; imgPaths.push(imageSRC)
+				gen.writeData('imagePaths.json', JSON.stringify(data, null, indentSpaces))
+			})
+		} catch(err) {
+			throw err
+		}
 	}
 }

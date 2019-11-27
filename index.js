@@ -216,11 +216,11 @@ router.get('/add-item', async ctx => {
  */
 router.post('/add-item', koaBody, async ctx => {
 	try {
-		const {path, type} = ctx.request.files.itemPicture // gets the path for uploaded image
+		const images = ctx.request.files.itemPicture // gets the path for uploaded image
 		const body = ctx.request.body
 		const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
-		await item.uploadPicture(path, type, body.name)
+		for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
 		const JSONFile = fs.readFileSync('itemOptions.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		gen.saveItemOptions('itemOptions.json', data, body.name, body.sizeOptions, body.colorOptions)
