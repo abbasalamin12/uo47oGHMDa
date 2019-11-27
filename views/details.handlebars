@@ -40,7 +40,10 @@
 							<option value="{{this}}">{{this}}</option>
 						{{/each}}
 					</select>
+				{{else}}
+					<input type="hidden" name={{@key}} value="">
 				{{/if}}
+				
 				{{/each}}
 				
 			{{else}}
