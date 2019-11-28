@@ -54,7 +54,7 @@ const indentSpaces = 4 // this variable represents the amount of spaces to use w
  */
 router.get('/', async ctx => {
 	try {
-		if(ctx.session.authorised !== true) return ctx.redirect('/login?msg=you need to log in')
+		gen.checkAuthorised(ctx)
 		const data = {}
 		if(ctx.query.msg) {
 			data.msg = ctx.query.msg
@@ -95,6 +95,7 @@ router.get('/browse', async ctx => {
  *
  * @name Details/Purchase Page
  * @route {GET} /details/:id
+ * 
  */
 router.get('/details/:id', async ctx => {
 	try {
@@ -117,8 +118,17 @@ router.get('/details/:id', async ctx => {
 	}
 })
 
+/**
+ * The page where the user can view items that they added to their cart
+ *
+ * @name Cart Page
+ * @route {GET} /cart
+ * @authentication This route requires cookie-based authentication.
+ * 
+ */
 router.get('/cart', async ctx => {
 	try {
+		gen.checkAuthorised(ctx)
 		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		const cartItems = data.carts[ctx.session.User]
@@ -137,8 +147,16 @@ router.get('/cart', async ctx => {
 	}
 })
 
+/**
+ * The script to process adding an item to user cart.
+ *
+ * @name AddToCart Script
+ * @route {POST} /cart
+ * @authentication This route requires cookie-based authentication.
+ */
 router.post('/cart', koaBody, async ctx => {
 	try {
+		gen.checkAuthorised(ctx)
 		const body = ctx.request.body
 		const user = await new User(dbName)
 		if(body.id!==undefined) await user.addToCart(ctx.session.User, body)
@@ -148,6 +166,12 @@ router.post('/cart', koaBody, async ctx => {
 	}
 })
 
+/**
+ * The script to process removing items from user cart.
+ *
+ * @name remove-from-cart Script
+ * @route {POST} /remove-from-cart
+ */
 router.post('/remove-from-cart', koaBody, async ctx => {
 	try {
 		const body = ctx.request.body
@@ -198,6 +222,46 @@ router.post('/register', koaBody, async ctx => {
 })
 
 /**
+ * The user registration page.
+ *
+ * @name Settings Page
+ * @route {GET} /settings
+ */
+router.get('/settings', async ctx => {
+	try {
+		gen.checkAuthorised(ctx)
+		// get current details
+		const sql = `SELECT addrLine, city, postcode FROM users WHERE user='${ctx.session.User}'`
+		const db = await Database.open(dbName);
+		const data = await db.get(sql)
+		await db.close()
+		await ctx.render('settings', {currentDetails: data})
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
+	}
+})
+
+/**
+ * The script to process user settings change.
+ *
+ * @name UpdateDetails Script
+ * @route {POST} /settings
+ */
+router.post('/settings', koaBody, async ctx => {
+	try {
+		// extract the data from the request
+		const body = ctx.request.body
+
+		const user = await new User(dbName)
+		await user.updateDetails(ctx.session.User, body.addrLine, body.city, body.postcode)
+		// redirect to the home page
+		ctx.redirect('/?msg=contact details have been updated')
+	} catch(err) {
+		await ctx.render('error', {message: err.message})
+	}
+})
+
+/**
  * The admin page for adding new items.
  *
  * @name Add Item Page
@@ -205,7 +269,7 @@ router.post('/register', koaBody, async ctx => {
  * @authentication This route requires cookie-based authentication.
  */
 router.get('/add-item', async ctx => {
-	if(ctx.session.authorised !== true) return ctx.redirect('/login?msg=you need to log in')
+	gen.checkAuthorised(ctx)
 	await ctx.render('add-item')
 })
 /**
@@ -234,6 +298,12 @@ router.post('/add-item', koaBody, async ctx => {
 	}
 })
 
+/**
+ * The page where users log in.
+ *
+ * @name Login Page
+ * @route {get} /login
+ */
 router.get('/login', async ctx => {
 	const data = {}
 	if(ctx.query.msg) data.msg = ctx.query.msg
@@ -241,6 +311,12 @@ router.get('/login', async ctx => {
 	await ctx.render('login', data)
 })
 
+/**
+ * The script to process authenticating a user.
+ *
+ * @name Login Script
+ * @route {POST} /login
+ */
 router.post('/login', async ctx => {
 	try {
 		const body = ctx.request.body
@@ -255,6 +331,12 @@ router.post('/login', async ctx => {
 	}
 })
 
+/**
+ * The script to process logging a user out.
+ *
+ * @name Logout Script
+ * @route {get} /logout
+ */
 router.get('/logout', async ctx => {
 	ctx.session.authorised = null
 	ctx.redirect('/?msg=you are now logged out')

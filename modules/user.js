@@ -78,4 +78,19 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 		}
 	}
 
+	async updateDetails(user, addrLine, city, postcode) {
+		try {
+			await Promise.all([gen.checkIfStringMissing(addrLine, 'address line'),
+				gen.checkIfStringMissing(city, 'city'),
+				gen.checkIfStringMissing(postcode, 'postcode')
+			]).catch()
+			const sql = `UPDATE users SET addrLine="${addrLine}", city="${city}",\
+postcode="${postcode}" WHERE user="${user}";`
+			await this.db.run(sql)
+			return true
+		} catch(err) {
+			throw err
+		}
+	}
+
 }

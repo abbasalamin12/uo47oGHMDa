@@ -35,6 +35,15 @@ module.exports = class generalFunctions {
 		}
 	}
 
+	async checkAuthorised(ctx) {
+		try {
+			console.log(ctx.session.authorised)
+			if(ctx.session.authorised !== true) ctx.redirect('/login?msg=you need to log in')
+		} catch(err) {
+			throw err
+		}
+	}
+
 
 	async removeArrFromArr(arr1, arr2) {
 		try {

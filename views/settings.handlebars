@@ -1,0 +1,29 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Create an Account</title>
+		<meta name="description" content="page to change account details">
+		<meta name="author" content="Mark Tyers">
+		<link href="style.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body>
+		<ul id="navbar">
+			<li><a href="/">Home</a></li>
+			<li><a href="/browse">Browse</a></li>
+			<li><a href="/cart">My Cart</a></li>
+			<li><a href="/add-item">Add an item</a></li>
+			<li><a href="/settings">Account Settings</a></li>
+		</ul> <hr>
+
+		<h1>Update Contact Details:</h1>
+		<form action="/settings" enctype="multipart/form-data" method="post">
+			<p>Address Line:<br /><input type="text" name="addrLine" value="{{currentDetails.addrLine}}"></p>
+			<p>Town/City:<br /><input type="text" name="city" value="{{currentDetails.city}}"></p>
+			<p>Postcode:<br /><input type="text" name="postcode" value="{{currentDetails.postcode}}"></p>
+			<p><input type="submit" value="Update"></p>
+		</form>
+	</body>
+</html>
