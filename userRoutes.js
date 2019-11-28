@@ -15,7 +15,6 @@ const bodyParser = require('koa-bodyparser')
 const koaBody = require('koa-body')({multipart: true, uploadDir: '.'})
 const session = require('koa-session')
 const fs = require('fs-extra')
-const hbs = require('handlebars')
 //const jimp = require('jimp')
 
 /* IMPORT CUSTOM MODULES */
@@ -35,7 +34,6 @@ app.use(views(`${__dirname}/views`, { extension: 'handlebars' }, {map: { handleb
 
 const dbName = 'website.db'
 const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
-const two = 2 // this variable represents the amount of decimal places to format price with
 
 // the routes:
 

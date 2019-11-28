@@ -32,6 +32,7 @@
 			<li><a href="/settings">Account Settings</a></li>
 			{{#if isAdmin}}
 			<li><a href="/add-item">Add an item</a></li>
+			<li><a href="/add-code">Add discount code</a></li>
 			{{/if}}
 		</ul> <hr>
 
@@ -69,6 +70,7 @@
 						<td style="background-color:white;"></td>
 						<td style="font-weight:bold; text-align:right;">Total:</td>
 						<td>£{{formatPrice totalItemPrice}} </td>
+						<td>£{{applyDiscountCode 'SAVE25' totalItemPrice}}</td>
 						
 					</tr>
 				</table>
