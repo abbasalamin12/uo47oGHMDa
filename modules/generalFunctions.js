@@ -2,6 +2,7 @@
 'use strict'
 
 const fs = require('fs-extra')
+const sqlite = require('sqlite-async')
 const indentSpaces = 4 // this is the amount of indents to use when formatting json
 
 module.exports = class generalFunctions {
@@ -35,6 +36,29 @@ module.exports = class generalFunctions {
 		}
 	}
 
+	async checkAuthorised(ctx) {
+		try {
+			if(ctx.session.authorised !== true) ctx.redirect('/login?msg=you need to log in')
+		} catch(err) {
+			throw err
+		}
+	}
+
+	async checkIfAdmin(ctx, dbName) {
+		try {
+			const user = ctx.session.User
+			const sql = `SELECT isAdmin FROM users WHERE user="${user}"`
+			const db = await sqlite.open(dbName)
+			const data = await db.get(sql)
+			if(data.isAdmin!=='true') {
+				ctx.session.isAdmin = false
+			} else {
+				ctx.session.isAdmin = true
+			}
+		} catch(err) {
+			throw err
+		}
+	}
 
 	async removeArrFromArr(arr1, arr2) {
 		try {

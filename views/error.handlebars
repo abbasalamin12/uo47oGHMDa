@@ -14,7 +14,10 @@
 			<li><a href="/">Home</a></li>
 			<li><a href="/browse">Browse</a></li>
 			<li><a href="/cart">My Cart</a></li>
+			<li><a href="/settings">Account Settings</a></li>
+			{{#if isAdmin}}
 			<li><a href="/add-item">Add an item</a></li>
+			{{/if}}
 		</ul> <hr>
 
         <h1>An Error Has Occurred</h1>
