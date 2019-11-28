@@ -45,6 +45,9 @@ const dbName = 'website.db'
 
 const two = 2 // this variable represents the amount of decimal places to format price with
 const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
+
+let isAdmin = false
+
 /**
  * The secure home page.
  *
@@ -58,10 +61,10 @@ router.get('/', async ctx => {
 		const data = {}
 		if(ctx.query.msg) {
 			data.msg = ctx.query.msg
-			await ctx.render('index', {message: data.msg})
-		} else await ctx.render('index')
+			await ctx.render('index', {message: data.msg, isAdmin: isAdmin})
+		} else await ctx.render('index', {isAdmin: isAdmin})
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -84,7 +87,7 @@ router.get('/browse', async ctx => {
 		const db = await Database.open(dbName)
 		const data = await db.all(sql)
 		await db.close()
-		await ctx.render('browse', {items: data, query: querystring})
+		await ctx.render('browse', {items: data, query: querystring, isAdmin: isAdmin})
 	} catch(err) {
 		ctx.body = err.message
 	}
@@ -105,10 +108,10 @@ router.get('/details/:id', async ctx => {
 		const parsedData = JSON.parse(JSONFile)
 		if(parsedData.itemData[`${data.name}`]) {
 			const itemData = parsedData.itemData[`${data.name}`]
-			const itemOptionsData = {'size': itemData.size, 'color': itemData.color}
+			const optionData = {'size': itemData.size, 'color': itemData.color}
 			const imagePaths = itemData.images
-			await ctx.render('details', {data: data, itemOptions: itemOptionsData, imagePaths: imagePaths})
-		} else await ctx.render('details', {data})
+			await ctx.render('details', {data: data, itemOptions: optionData, imagePaths: imagePaths, isAdmin: isAdmin})
+		} else await ctx.render('details', {data, isAdmin: isAdmin})
 	} catch(err) {
 		ctx.body = err.message
 		if(err.code === 'ENOENT') {
@@ -132,11 +135,11 @@ router.get('/cart', async ctx => {
 		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		const cartItems = data.carts[ctx.session.User]
-		if(!cartItems) await ctx.render('cart')
+		if(!cartItems) await ctx.render('cart', {isAdmin: isAdmin})
 		else {
 			let totalPrice = 0
 			for(const i in cartItems) totalPrice += parseInt(cartItems[i].price)
-			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice})
+			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice, isAdmin: isAdmin})
 		}
 	} catch(err) { // creates carts.json if it doesn't exist
 		if(err.code === 'ENOENT') {
@@ -162,7 +165,7 @@ router.post('/cart', koaBody, async ctx => {
 		if(body.id!==undefined) await user.addToCart(ctx.session.User, body)
 		await ctx.redirect('/cart')
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -188,7 +191,7 @@ router.post('/remove-from-cart', koaBody, async ctx => {
 		})
 		await ctx.redirect('/cart')
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -198,7 +201,7 @@ router.post('/remove-from-cart', koaBody, async ctx => {
  * @name Register Page
  * @route {GET} /register
  */
-router.get('/register', async ctx => await ctx.render('register'))
+router.get('/register', async ctx => await ctx.render('register', {isAdmin: isAdmin}))
 
 /**
  * The script to process new user registrations.
@@ -217,7 +220,7 @@ router.post('/register', koaBody, async ctx => {
 		// redirect to the home page
 		ctx.redirect(`/?msg=new user "${body.name}" added`)
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -235,9 +238,9 @@ router.get('/settings', async ctx => {
 		const db = await Database.open(dbName);
 		const data = await db.get(sql)
 		await db.close()
-		await ctx.render('settings', {currentDetails: data})
+		await ctx.render('settings', {currentDetails: data, isAdmin: isAdmin})
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -257,7 +260,7 @@ router.post('/settings', koaBody, async ctx => {
 		// redirect to the home page
 		ctx.redirect('/?msg=contact details have been updated')
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -270,7 +273,11 @@ router.post('/settings', koaBody, async ctx => {
  */
 router.get('/add-item', async ctx => {
 	gen.checkAuthorised(ctx)
-	await ctx.render('add-item')
+	if(ctx.session.isAdmin) {
+		await ctx.render('add-item', {isAdmin: isAdmin})
+	} else {
+		ctx.redirect('/?msg=Only admins can use this page')
+	}	
 })
 /**
  * The script to process adding new items.
@@ -294,7 +301,7 @@ router.post('/add-item', koaBody, async ctx => {
 			const body = ctx.request.body; const data = {'itemData': {} }
 			gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 			ctx.redirect('/')
-		} else await ctx.render('error', {message: err.message})
+		} else await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 
@@ -308,7 +315,7 @@ router.get('/login', async ctx => {
 	const data = {}
 	if(ctx.query.msg) data.msg = ctx.query.msg
 	if(ctx.query.user) data.user = ctx.query.user
-	await ctx.render('login', data)
+	await ctx.render('login', data, isAdmin)
 })
 
 /**
@@ -324,10 +331,11 @@ router.post('/login', async ctx => {
 		await user.login(body.user, body.pass)
 		ctx.session.authorised = true
 		ctx.session.User = body.user
-		console.log(ctx.session.User)
+		await gen.checkIfAdmin(ctx, dbName)
+		isAdmin = ctx.session.isAdmin
 		return ctx.redirect('/?msg=you are now logged in...')
 	} catch(err) {
-		await ctx.render('error', {message: err.message})
+		await ctx.render('error', {message: err.message, isAdmin: isAdmin})
 	}
 })
 

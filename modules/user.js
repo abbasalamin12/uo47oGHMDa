@@ -16,7 +16,7 @@ module.exports = class User {
 			this.db = await sqlite.open(dbName)
 			// we need this table to store the user accounts
 			const sql = 'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, pass TEXT,\
-addrLine TEXT, city TEXT, postcode TEXT);'
+addrLine TEXT, city TEXT, postcode TEXT, isAdmin TEXT);'
 			await this.db.run(sql)
 			return this
 		})()
@@ -34,8 +34,8 @@ addrLine TEXT, city TEXT, postcode TEXT);'
 			const data = await this.db.get(sql)
 			if(data.records !== 0) throw new Error(`username "${user}" already in use`)
 			pass = await bcrypt.hash(pass, saltRounds)
-			sql = `INSERT INTO users(user, pass, addrLine, city, postcode) \
-			VALUES("${user}", "${pass}", "${addrLine}", "${city}", "${postcode}")`
+			sql = `INSERT INTO users(user, pass, addrLine, city, postcode, isAdmin) \
+			VALUES("${user}", "${pass}", "${addrLine}", "${city}", "${postcode}", "false")`
 			await this.db.run(sql)
 			return true
 		} catch(err) {
