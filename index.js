@@ -56,8 +56,10 @@ router.get('/', async ctx => {
 	try {
 		if(ctx.session.authorised !== true) return ctx.redirect('/login?msg=you need to log in')
 		const data = {}
-		if(ctx.query.msg) data.msg = ctx.query.msg
-		await ctx.render('index')
+		if(ctx.query.msg) {
+			data.msg = ctx.query.msg
+			await ctx.render('index', {message: data.msg})
+		} else await ctx.render('index')
 	} catch(err) {
 		await ctx.render('error', {message: err.message})
 	}
@@ -73,7 +75,6 @@ router.get('/browse', async ctx => {
 	try {
 		let sql = 'SELECT id, name, description, price, imageSRC FROM items;'
 		let querystring = ''
-		console.log(ctx.query.q)
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
 			sql = `SELECT id, name, description, price, imageSRC FROM items 
 							WHERE upper(name) LIKE "%${ctx.query.q}%" 
@@ -83,7 +84,6 @@ router.get('/browse', async ctx => {
 		const db = await Database.open(dbName)
 		const data = await db.all(sql)
 		await db.close()
-		console.log(data)
 		await ctx.render('browse', {items: data, query: querystring})
 	} catch(err) {
 		ctx.body = err.message
@@ -217,18 +217,17 @@ router.get('/add-item', async ctx => {
 router.post('/add-item', koaBody, async ctx => {
 	try {
 		const images = ctx.request.files.itemPicture // gets the path for uploaded image
-		const body = ctx.request.body
-		const item = await new Item(dbName)
+		const body = ctx.request.body;const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
-		for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
+		if(!Array.isArray(images)) await item.uploadPicture(images.path, images.type, body.name, 0)
+		else for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
 		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
 		const data = JSON.parse(JSONFile)
 		gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
 		if(err.code === 'ENOENT') {
-			const body = ctx.request.body
-			const data = {'itemData': {} }
+			const body = ctx.request.body; const data = {'itemData': {} }
 			gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 			ctx.redirect('/')
 		} else await ctx.render('error', {message: err.message})

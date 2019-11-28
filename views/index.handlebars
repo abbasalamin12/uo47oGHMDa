@@ -18,6 +18,9 @@
 		</ul> <hr>
 		
 		<h1>Home</h1>
+		{{#if message}}
+			<p class="msg"> {{message}} </p>
+		{{/if}}
 		<p>This is a secure page. Users need to have a valid account and be logged in to see it.</p>
 		<p><a href="/logout">log out</a></p>
 </html>
