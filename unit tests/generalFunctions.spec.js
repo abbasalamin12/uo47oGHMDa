@@ -117,8 +117,7 @@ describe('checkIfStringMissing()', () => {
 	})
 
 	test('non-empty string', async done => {
-		expect.assertions(1)
-		expect(gen.checkIfStringMissing('example item', 'item')).toBe(true)
+		await expect(gen.checkIfStringMissing('example item', 'item')).resolves.toEqual(true)
 		done()
 	})
 })
