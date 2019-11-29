@@ -70,6 +70,7 @@ router.get('/', async ctx => {
  */
 router.get('/browse', async ctx => {
 	try {
+		await new Item(dbName) // creates the db if it doesn't exist yet
 		let sql = 'SELECT id, name, description, price, imageSRC FROM items;'
 		let querystring = ''
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
