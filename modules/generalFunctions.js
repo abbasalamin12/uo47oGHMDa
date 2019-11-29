@@ -11,8 +11,6 @@ const sqlite = require('sqlite-async')
 const indentSpaces = 4 // this is the amount of indents to use when formatting json
 
 module.exports = class generalFunctions {
-
-
 	/**
 	 * @function writeData
 	 * This function is used write data to an existing file.
@@ -39,6 +37,7 @@ module.exports = class generalFunctions {
 	async checkIfStringMissing(varValue, varName) {
 		try {
 			if(varValue.length === 0) throw new Error(`missing ${varName}`)
+			else return true
 		} catch(err) {
 			throw err
     	}

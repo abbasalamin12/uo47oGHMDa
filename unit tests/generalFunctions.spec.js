@@ -2,7 +2,7 @@
 'use strict'
 
 const General = require('../modules/generalFunctions.js')
-
+const gen = new General()
 // this function is used to remove arrays within other arrays
 // the function is used to remove arrays from the carts.json
 // example array of carts:
@@ -35,7 +35,6 @@ const General = require('../modules/generalFunctions.js')
 describe('removeArrFromArr()', () => {
 	test('remove the first array', async done => {
 		//arrange
-		const gen = new General()
 		const arr1 = [{'user': 'Abbas', 'surname': 'Al-Amin'},
 			{'user': 'Bob', 'surname': 'Jones'},
 			{'user': 'John', 'surname': 'Smith'},
@@ -53,7 +52,6 @@ describe('removeArrFromArr()', () => {
 
 	test('remove the an array from the middle', async done => {
 		//arrange
-		const gen = new General()
 		const arr1 = [{'user': 'Abbas', 'surname': 'Al-Amin'},
 			{'user': 'Bob', 'surname': 'Jones'},
 			{'user': 'John', 'surname': 'Smith'},
@@ -71,7 +69,6 @@ describe('removeArrFromArr()', () => {
 
 	test('remove the last array', async done => {
 		//arrange
-		const gen = new General()
 		const arr1 = [{'user': 'Abbas', 'surname': 'Al-Amin'},
 			{'user': 'Bob', 'surname': 'Jones'},
 			{'user': 'John', 'surname': 'Smith'},
@@ -89,7 +86,6 @@ describe('removeArrFromArr()', () => {
 
 	test('remove the only array', async done => {
 		//arrange
-		const gen = new General()
 		const arr1 = [{'user': 'Abbas', 'surname': 'Al-Amin'}]
 
 		const arr2 = {'user': 'Abbas', 'surname': 'Al-Amin'}
@@ -102,7 +98,6 @@ describe('removeArrFromArr()', () => {
 
 	test('remove an array that doesnt exist', async done => {
 		//arrange
-		const gen = new General()
 		const arr1 = [{'user': 'Abbas', 'surname': 'Al-Amin'}]
 
 		const arr2 = {'user': 'Bob', 'surname': 'Jones'}
@@ -110,6 +105,20 @@ describe('removeArrFromArr()', () => {
 		const expectedOutputArray = JSON.stringify(arr1)
 		// action and assert
 		await expect( gen.removeArrFromArr(arr2, arr1)).resolves.toEqual(expectedOutputArray)
+		done()
+	})
+})
+
+describe('checkIfStringMissing()', () => {
+	test('empty string', async done => {
+		await expect(gen.checkIfStringMissing('', 'item'))
+			.rejects.toEqual( Error('missing item'))
+		done()
+	})
+
+	test('non-empty string', async done => {
+		expect.assertions(1)
+		expect(gen.checkIfStringMissing('example item', 'item')).toBe(true)
 		done()
 	})
 })
