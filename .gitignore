@@ -27,4 +27,5 @@ trace/
 *.c9
 carts.json
 itemData.json
+discountCodes.json
 public/item_images
