@@ -140,20 +140,18 @@ router.get('/add-item', async ctx => {
 router.post('/add-item', koaBody, async ctx => {
 	try {
 		const images = ctx.request.files.itemPicture // gets the path for uploaded image
-		const body = ctx.request.body;const item = await new Item(dbName)
+		const body = await ctx.request.body;const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
 		if(!Array.isArray(images)) await item.uploadPicture(images.path, images.type, body.name, 0)
 		else for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
-		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
-		const data = JSON.parse(JSONFile)
-		gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
+		if(!fs.existsSync('itemData.json')) gen.writeData('itemData.json', JSON.stringify({'itemData': {}}))
+		fs.readFile('itemData.json', (_err, data) => {
+			data = JSON.parse(data)
+			gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
+		})
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {
-		if(err.code === 'ENOENT') {
-			const body = ctx.request.body; const data = {'itemData': {} }
-			gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
-			ctx.redirect('/')
-		} else await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
+		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
 	}
 })
 
