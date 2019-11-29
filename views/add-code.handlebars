@@ -1,0 +1,32 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Add a Discount Code</title>
+		<meta name="description" content="admin form to add new discount codes">
+		<meta name="author" content="Abbas Mohamed Al-Amin">
+		<link href="style.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body>
+		<ul id="navbar">
+			<li><a href="/">Home</a></li>
+			<li><a href="/browse">Browse</a></li>
+			<li><a href="/cart">My Cart</a></li>
+			<li><a href="/settings">Account Settings</a></li>
+			{{#if isAdmin}}
+			<li><a href="/add-item">Add an item</a></li>
+			<li><a href="/add-code">Add discount code</a></li>
+			{{/if}}
+		</ul> <hr>
+
+		<h1>Add a discount code</h1>
+		<form action="/add-code" enctype="multipart/form-data" method="post">
+			<p>If the discount value is 25% off, it should be entered as 25.</p>
+			<p>Discount Code Phrase:<br /><input type="text" name="codeName" value="" placeholder='SAVE25'></p>
+			<p>Discount Value: <br /><input type="number" name="codeValue" placeholder=25></p>
+			<p><input type="submit" value="Add"></p>
+		</form>
+	</body>
+</html>

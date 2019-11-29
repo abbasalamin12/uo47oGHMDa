@@ -36,9 +36,9 @@ app.use(views(`${__dirname}/views`, { extension: 'handlebars' }, {map: { handleb
 
 const defaultPort = 8080
 const port = process.env.PORT || defaultPort
-const dbName = 'website.db'
 
-const two = 2 // this variable represents the amount of decimal places to format price with
+const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
+const dbName = 'website.db'
 
 // the routes:
 
@@ -70,6 +70,7 @@ router.get('/', async ctx => {
  */
 router.get('/browse', async ctx => {
 	try {
+		await new Item(dbName) // creates the db if it doesn't exist yet
 		let sql = 'SELECT id, name, description, price, imageSRC FROM items;'
 		let querystring = ''
 		if(ctx.query !== undefined && ctx.query.q !== undefined) { // if there is a search query
@@ -156,6 +157,47 @@ router.post('/add-item', koaBody, async ctx => {
 	}
 })
 
+/**
+ * The admin page for adding new discount codes.
+ *
+ * @name Add Item Page
+ * @route {GET} /add-code
+ * @authentication This route requires cookie-based authentication.
+ */
+router.get('/add-code', async ctx => {
+	gen.checkAuthorised(ctx)
+	if(ctx.session.isAdmin) {
+		await ctx.render('add-code', {isAdmin: ctx.session.isAdmin})
+	} else {
+		ctx.redirect('/?msg=Only admins can use this page')
+	}
+})
+
+/**
+ * The script to process adding new discount codes.
+ *
+ * @name Add Item Script
+ * @route {POST} /add-item
+ */
+router.post('/add-code', koaBody, async ctx => {
+	try {
+		const body = ctx.request.body
+		const JSONexists = fs.existsSync('discountCodes.json')
+		if(!JSONexists) gen.writeData('discountCodes.json', JSON.stringify({'discountCodes': {}}))
+		fs.readFile('discountCodes.json', (_err, data) => {
+			try{
+				data = JSON.parse(data)
+				data.discountCodes[`${body.codeName}`] = parseInt(body.codeValue)
+				gen.writeData('discountCodes.json', JSON.stringify(data, null, indentSpaces))
+			} catch(err) {
+				throw err
+			}
+		})
+		ctx.redirect(`/?msg=new code "${body.codeName}" added for ${body.codeValue}%+off`)
+	} catch(err) {
+		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
+	}
+})
 app.use(router.routes())
 app.use(userRoutes.routes())
 module.exports = app.listen(port, async() => console.log(`listening on port ${port}`))
