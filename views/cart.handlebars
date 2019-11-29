@@ -32,6 +32,7 @@
 			<li><a href="/settings">Account Settings</a></li>
 			{{#if isAdmin}}
 			<li><a href="/add-item">Add an item</a></li>
+			<li><a href="/add-code">Add discount code</a></li>
 			{{/if}}
 		</ul> <hr>
 
@@ -68,10 +69,25 @@
 					<tr>
 						<td style="background-color:white;"></td>
 						<td style="font-weight:bold; text-align:right;">Total:</td>
+						{{#if (discountValid discount)}}
+						<td>£{{applyDiscountAndFormat discount totalItemPrice}} </td>
+						{{else}}
 						<td>£{{formatPrice totalItemPrice}} </td>
-						
+						{{/if}}
 					</tr>
 				</table>
+				{{#unless (discountValid discount)}}
+				<form action="/apply-discount" enctype="multipart/form-data" method="post">
+					<input type="text" name="code" value="" placeholder='SAVE25'></p>
+					<input type="submit" value="Apply Discount">
+				</form>
+				{{/unless}}
+				{{#if (discountValid discount)}}
+				<p>{{formatDiscount discount}}% discount has been applied.</p>
+				<form action="/remove-discount" enctype="multipart/form-data" method="post">
+					<input type="submit" value="Remove Discount">
+				</form>
+				{{/if}}
 			{{else}}
 				<p> Your cart is empty. </p>
 			{{/if}}
