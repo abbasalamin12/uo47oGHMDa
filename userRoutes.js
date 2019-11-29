@@ -20,7 +20,6 @@ const fs = require('fs-extra')
 /* IMPORT CUSTOM MODULES */
 const User = require('./modules/user')
 const General = require('./modules/generalFunctions')
-
 const gen = new General()
 const app = new Koa()
 const router = new Router()
@@ -34,8 +33,7 @@ app.use(views(`${__dirname}/views`, { extension: 'handlebars' }, {map: { handleb
 
 const dbName = 'website.db'
 const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
-
-// the routes:
+const pointZeroOne = 0.01 // this is the number to use to make numbers into a multiplier
 
 /**
  * The user registration page.
@@ -106,7 +104,7 @@ router.post('/login', async ctx => {
  * @route {get} /logout
  */
 router.get('/logout', async ctx => {
-	ctx.session.authorised = null
+	ctx.session.authorised = null;ctx.session.discount = 1
 	ctx.redirect('/?msg=you are now logged out')
 })
 
@@ -121,21 +119,19 @@ router.get('/logout', async ctx => {
 router.get('/cart', async ctx => {
 	try {
 		gen.checkAuthorised(ctx)
-		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
-		const data = JSON.parse(JSONFile)
+		const data = JSON.parse(fs.readFileSync('carts.json', 'utf-8'))
 		const cartItems = data.carts[ctx.session.User]
 		if(!cartItems) await ctx.render('cart', {isAdmin: ctx.session.isAdmin})
 		else {
 			let totalPrice = 0
 			for(const i in cartItems) totalPrice += parseInt(cartItems[i].price)
-			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice, isAdmin: ctx.session.isAdmin})
+			await ctx.render('cart', {cartItems: cartItems, totalItemPrice: totalPrice,
+				 isAdmin: ctx.session.isAdmin, discount: ctx.session.discount})
 		}
 	} catch(err) { // creates carts.json if it doesn't exist
 		if(err.code === 'ENOENT') {
-			gen.writeData('carts.json', '{"carts": {}}')
-			ctx.redirect('/cart')
-		}
-		ctx.body = err.message
+			gen.writeData('carts.json', '{"carts": {}}'); ctx.redirect('/cart')
+		} else await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
 	}
 })
 
@@ -149,9 +145,48 @@ router.get('/cart', async ctx => {
 router.post('/cart', koaBody, async ctx => {
 	try {
 		gen.checkAuthorised(ctx)
-		const body = ctx.request.body
-		const user = await new User(dbName)
+		const body = ctx.request.body;const user = await new User(dbName)
 		if(body.id!==undefined) await user.addToCart(ctx.session.User, body)
+		await ctx.redirect('/cart')
+	} catch(err) {
+		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
+	}
+})
+
+/**
+ * The script to process applying discounts
+ *
+ * @name ApplyDiscount Script
+ * @route {POST} /apply-discount
+ */
+router.post('/apply-discount', koaBody, async ctx => {
+	try {
+		const body = ctx.request.body
+		const codesWithValues = JSON.parse(fs.readFileSync('discountCodes.json', 'utf-8')).discountCodes
+		const codes = Object.keys(codesWithValues)
+		if(codes.includes(body.code)) { // if code is valid
+			ctx.session.discount = 1-codesWithValues[body.code]*pointZeroOne // discount multiplier
+			await ctx.redirect('/cart')
+		} else await ctx.redirect('/cart')
+	} catch(err) {
+		if(err.code==='ENOENT') {
+			gen.writeData('discountCodes.json', JSON.stringify({'discountCodes': {}}))
+			await ctx.redirect('/cart')
+		}
+		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
+	}
+})
+
+/**
+ * The script to process removing discounts
+ *
+ * @name RemoveDiscount Script
+ * @route {POST} /remove-discount
+ * @authentication This route requires cookie-based authentication.
+ */
+router.post('/remove-discount', koaBody, async ctx => {
+	try {
+		gen.checkAuthorised(ctx); ctx.session.discount = 1
 		await ctx.redirect('/cart')
 	} catch(err) {
 		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
@@ -167,14 +202,11 @@ router.post('/cart', koaBody, async ctx => {
 router.post('/remove-from-cart', koaBody, async ctx => {
 	try {
 		const body = ctx.request.body
-		const JSONFile = fs.readFileSync('carts.json', 'utf-8')
-		const data = JSON.parse(JSONFile)
+		const data = JSON.parse(fs.readFileSync('carts.json', 'utf-8'))
 		let userCart = data.carts[ctx.session.User]
-
 		gen.removeArrFromArr(body, userCart).then( newJSON => {
 			userCart = JSON.parse(newJSON)
 			data.carts[ctx.session.User] = userCart
-
 			const formattedData = JSON.stringify(data, null, indentSpaces)
 			gen.writeData('carts.json', formattedData)
 		})
@@ -212,9 +244,7 @@ router.get('/settings', async ctx => {
  */
 router.post('/settings', koaBody, async ctx => {
 	try {
-		// extract the data from the request
 		const body = ctx.request.body
-
 		const user = await new User(dbName)
 		await user.updateDetails(ctx.session.User, body.addrLine, body.city, body.postcode)
 		// redirect to the home page
