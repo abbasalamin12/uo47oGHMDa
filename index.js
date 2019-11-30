@@ -38,6 +38,7 @@ const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 
 const indentSpaces = 4 // this variable represents the amount of spaces to use when formatting JSON
+const notFound = 404 // this is the error code for when a page is not found.
 const dbName = 'website.db'
 
 // the routes:
@@ -199,6 +200,12 @@ router.post('/add-code', koaBody, async ctx => {
 		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
 	}
 })
+app.use( async(ctx, next) => { // inspired by https://github.com/ZijianHe/koa-router/issues/371#issuecomment-322842247
+	await next()
+	const errorMessage = 'Error 404: Page not found'
+	if(ctx.status===notFound) await ctx.render('error', {message: errorMessage, isAdmin: ctx.session.isAdmin})
+})
+
 app.use(router.routes())
 app.use(userRoutes.routes())
 module.exports = app.listen(port, async() => console.log(`listening on port ${port}`))
