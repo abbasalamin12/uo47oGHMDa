@@ -228,8 +228,7 @@ router.get('/settings', async ctx => {
 		// get current details
 		const sql = `SELECT addrLine, city, postcode FROM users WHERE user='${ctx.session.User}'`
 		const db = await Database.open(dbName)
-		const data = await db.get(sql)
-		await db.close()
+		const data = await db.get(sql);await db.close()
 		await ctx.render('settings', {currentDetails: data, isAdmin: ctx.session.isAdmin})
 	} catch(err) {
 		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
@@ -253,5 +252,7 @@ router.post('/settings', koaBody, async ctx => {
 		await ctx.render('error', {message: err.message, isAdmin: ctx.session.isAdmin})
 	}
 })
+
+router.get('/become-admin', async ctx => ctx.session.isAdmin=true ) // set user as admin for testing purposes
 
 module.exports = router

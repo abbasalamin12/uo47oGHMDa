@@ -80,7 +80,7 @@ module.exports = class generalFunctions {
 
 	/**
 	 * @function checkIfAdmin
-	 * This function is used to check if the logged in user is an admin.
+	 * This function is used to check if the logged in user is an admin and sets it in the cookies.
 	 *
 	 * @param {Object} ctx - This is the context object which stores the cookies.
 	 * @param {string} dbName - This is the name of the database that stores the user table.
