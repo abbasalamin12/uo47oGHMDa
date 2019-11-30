@@ -8,4 +8,4 @@ mkdir -p trace
 node index.js&
 node_modules/.bin/jest --runInBand --detectOpenHandles acceptanceTests/*
 read -p "Press enter to continue"
-kill %1
+killall node

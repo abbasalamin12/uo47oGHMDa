@@ -142,10 +142,11 @@ router.post('/add-item', koaBody, async ctx => {
 		const images = ctx.request.files.itemPicture // gets the path for uploaded image
 		const body = ctx.request.body;const item = await new Item(dbName)
 		await item.addItem(body.name, body.description, body.price)
-		if(!Array.isArray(images)) await item.uploadPicture(images.path, images.type, body.name, 0)
-		else for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
-		const JSONFile = fs.readFileSync('itemData.json', 'utf-8')
-		const data = JSON.parse(JSONFile)
+		if(!Array.isArray(images)) {
+			await gen.checkIfStringMissing(images.name, 'item image')
+			await item.uploadPicture(images.path, images.type, body.name, 0)
+		} else for(const i in images) await item.uploadPicture(images[i].path, images[i].type, body.name, i)
+		const data = JSON.parse(fs.readFileSync('itemData.json', 'utf-8'))
 		gen.saveItemOptions('itemData.json', data, body.name, body.sizeOptions, body.colorOptions)
 		ctx.redirect(`/?msg=new item "${body.name}" added`)
 	} catch(err) {

@@ -30,8 +30,8 @@
 			{{/each}}
 		</ul>
 		
-		<p>{{data.description}}</p>
-		<p>£{{formatPrice data.price}}</p>
+		<p class="description">{{data.description}}</p>
+		<p class="price">£{{formatPrice data.price}}</p>
 
 		<form action="/cart" enctype="multipart/form-data" method="post">
 			{{#if itemOptions}}
