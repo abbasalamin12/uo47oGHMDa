@@ -54,7 +54,7 @@ module.exports = class Item {
 	}
 
 	/**
-	 * @function uploadPicture
+	 * @function uploadPicture 
 	 * This function is used to add an image to an item.
 	 * The image path is saved in a json with the item name as a reference.
 	 * @param {string} path - The path of the image being used
